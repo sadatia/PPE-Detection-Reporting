@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTJV Safety & HSE Compliance Audit Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .tab-active { background-color: rgba(30, 41, 59, 0.7); border-color: rgba(51, 65, 85, 0.8); color: #f8fafc; }
+        .tab-inactive { color: #94a3b8; border-color: transparent; }
+        .tab-inactive:hover { color: #f1f5f9; background-color: rgba(15, 23, 42, 0.4); }
+    </style>
+
+<style>
+  /* Compact tab content spacing */
+  .tab-content, #health-tab, #system-health, main {
+    margin-top: 1rem !important;
+    padding-top: 0.5rem !important;
+  }
+  .nav-tabs, .tab-bar, .sub-header {
+    margin-bottom: 0.75rem !important;
+  }
+</style>
+</head>
+<body class="text-slate-100 min-h-0 antialiased flex flex-col justify-start gap-4">
+
+    <!-- Top Navigation Header -->
+    <header class="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur sticky top-0 z-40 px-6 py-3">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-start gap-4 gap-4">
+            
+            <!-- Left: Brand & Architecture Description -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500/20 text-amber-400 p-2.5 rounded-xl border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
+                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base font-bold tracking-tight text-white uppercase font-sans">
+                            PTJV Safety & HSE Compliance Audit Portal
+                        </h1>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded font-mono font-bold tracking-wider">
+                            LIVE AI-CCTV
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400">
+                        6 Active Cameras • Real-time RTP Audio Horn Stream • Multi-Channel Alerts
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right: System Status Indicators & Tools -->
+            <div class="flex items-center flex-wrap gap-2.5 text-xs font-mono">
+                <!-- Camera Status -->
+                <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
+                    <i data-lucide="video" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>CAM 01–06</span>
+                    <span class="text-emerald-400 font-bold">(6/6)</span>
+                </div>
+
+                <!-- Barix Speaker Status -->
+                <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
+                    <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Barix .13: <span class="text-emerald-400 font-bold">4444 Active</span></span>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-slate-400">.16: <span class="text-amber-400">Standby</span></span>
+                </div>
+
+                <!-- Channels -->
+                <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
+                    <span class="flex items-center gap-1 text-cyan-400"><i data-lucide="send" class="w-3 h-3"></i> TG Bot</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="flex items-center gap-1 text-emerald-400"><i data-lucide="message-square" class="w-3 h-3"></i> WAHA Group</span>
+                </div>
+
+                <!-- Synchronized OS Clock & Shift -->
+                <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-200">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span id="header-clock" class="text-slate-100 font-bold">--:--:--</span>
+                    <span class="text-slate-600">|</span>
+                    <span id="header-shift" class="text-slate-300">Syncing...</span>
+                </div>
+
+                <!-- Simulate Alert Trigger -->
+                <button onclick="simulateIncident()" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold font-sans px-3.5 py-1.5 rounded-lg transition shadow-md shadow-amber-500/20">
+                    <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+                    Simulate Alert
+                </button>
+            </div>
+        </div>
+
+        <!-- Primary Navigation Tabs -->
+        <div class="max-w-[1600px] mx-auto mt-3 flex items-center gap-2 pt-2 border-t border-slate-800/40">
+            <button onclick="switchTab('queue')" data-tab="queue" id="tab-btn-queue" class="tab-active flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition">
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-400"></i>
+                Incident Audit Queue
+                <span id="tab-badge-pending" class="bg-amber-500/20 text-amber-400 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold border border-amber-500/40">0</span>
+            </button>
+            <button onclick="switchTab('analytics')" data-tab="analytics" id="tab-btn-analytics" class="tab-inactive flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition">
+                <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+                Compliance Analytics
+            </button>
+            <button onclick="switchTab('zones')" data-tab="zones" id="tab-btn-zones" class="tab-inactive flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition">
+                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                Camera & Audio Zones
+                <span class="bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded font-mono text-[10px]">6 Active</span>
+            </button>
+            <button onclick="switchTab('system')" id="tab-btn-system" class="tab-inactive flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition">
+                <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                System Service & Dispatch Health
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-[1600px] mx-auto px-6 py-6 w-full space-y-6">
+
+        <!-- ==================== TAB 1: AUDIT QUEUE ==================== -->
+        <div id="tab-view-queue" class="space-y-6">
+            
+            <!-- KPI Metric Cards Matching Screenshot Exactly -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                
+                <!-- 1. Total Violations Today -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden backdrop-blur">
+                    <div class="flex items-center justify-start gap-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <span>Total Violations Today</span>
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+                    </div>
+                    <div class="mt-2.5 flex items-baseline gap-2">
+                        <span id="kpi-total" class="text-3xl font-extrabold font-mono text-white">0</span>
+                        <span class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5">
+                            <i data-lucide="trending-down" class="w-3.5 h-3.5"></i> -14% vs Yday
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Across 6 monitored zones</p>
+                </div>
+
+                <!-- 2. Critical PPE (Zero Tol.) -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden backdrop-blur">
+                    <div class="flex items-center justify-start gap-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <span>Critical PPE (Zero Tol.)</span>
+                        <i data-lucide="hard-hat" class="w-4 h-4 text-rose-400"></i>
+                    </div>
+                    <div class="mt-2.5 flex items-baseline gap-2">
+                        <span id="kpi-critical" class="text-3xl font-extrabold font-mono text-rose-400">0</span>
+                        <span class="text-[10px] font-mono bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded font-bold">
+                            Immediate Horn
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">No Helmet or Working at Height</p>
+                </div>
+
+                <!-- 3. Highest Risk Zone -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden backdrop-blur">
+                    <div class="flex items-center justify-start gap-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <span>Highest Risk Zone</span>
+                        <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i>
+                    </div>
+                    <div class="mt-2 text-base font-bold text-slate-100 flex items-center gap-1.5 truncate">
+                        Zone E (Hot Work)
+                    </div>
+                    <div class="flex items-center gap-1.5 text-xs text-slate-300 mt-1 font-mono">
+                        <span class="text-amber-400 font-bold">CAM_05</span> • <span id="kpi-cam05-count">16 Incidents</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5 truncate">CPA Castle area</p>
+                </div>
+
+                <!-- 4. Officer Audit Rate -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden backdrop-blur">
+                    <div class="flex items-center justify-start gap-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <span>Officer Audit Rate</span>
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div class="mt-2.5 flex items-baseline gap-2">
+                        <span id="kpi-audit-rate" class="text-3xl font-extrabold font-mono text-emerald-400">83%</span>
+                        <span class="text-xs text-slate-400">Reviewed</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div id="kpi-audit-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 83%"></div>
+                    </div>
+                </div>
+
+                <!-- 5. Horn Cooldown Gate -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden backdrop-blur">
+                    <div class="flex items-center justify-start gap-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <span>Horn Cooldown Gate</span>
+                        <i data-lucide="timer" class="w-4 h-4 text-cyan-400"></i>
+                    </div>
+                    <div class="mt-2.5 flex items-baseline gap-2">
+                        <span class="text-3xl font-extrabold font-mono text-cyan-400">15.0s</span>
+                        <span class="text-xs text-slate-400">per zone</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Protects Barix buffer & TOA horn</p>
+                </div>
+            </div>
+
+            <!-- Query & Filter Toolbar -->
+            <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3.5 flex flex-wrap items-center justify-start gap-4 gap-3">
+                <div class="flex items-center flex-wrap gap-2.5 flex-1 min-w-[320px]">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 min-w-[220px]">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input id="search-query" oninput="applyFilters()" type="text" placeholder="Search incident, zone, worker ID..." class="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50">
+                    </div>
+
+                    <!-- Camera Select -->
+                    <select id="filter-cam" onchange="applyFilters()" class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50">
+                        <option value="ALL">All Cameras (CAM 01 - 06)</option>
+                        <option value="CAM_01">CAM_01 (Zone A - Main Entrance)</option>
+                        <option value="CAM_02">CAM_02 (Zone B - Crane Yard)</option>
+                        <option value="CAM_03">CAM_03 (Zone C - Scaffolding)</option>
+                        <option value="CAM_04">CAM_04 (Zone D - Excavation)</option>
+                        <option value="CAM_05">CAM_05 (Zone E - Hot Work)</option>
+                        <option value="CAM_06">CAM_06 (Zone F - Material Storage)</option>
+                    </select>
+
+                    <!-- Status Select -->
+                    <select id="filter-status" onchange="applyFilters()" class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50">
+                        <option value="ALL">All Audit Statuses</option>
+                        <option value="PENDING">Pending Audit</option>
+                        <option value="APPROVED">Approved Violation</option>
+                        <option value="ACTION_TAKEN">Action Taken</option>
+                        <option value="FALSE_POSITIVE">False Positive</option>
+                    </select>
+
+                    <!-- Severity Select -->
+                    <select id="filter-severity" onchange="applyFilters()" class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50">
+                        <option value="ALL">All Severities</option>
+                        <option value="CRITICAL">Critical</option>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM">Medium</option>
+                    </select>
+                </div>
+
+                <!-- Export CSV Button -->
+                <button onclick="exportCSV()" class="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700/80 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-amber-400"></i>
+                    Export CSV Log
+                </button>
+            </div>
+
+            <!-- Incident Audit Queue Table Matching Screenshot Columns Exactly -->
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950/90 text-[11px] uppercase font-mono tracking-wider text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="px-5 py-3.5 font-bold">Incident ID & Time</th>
+                                <th class="px-5 py-3.5 font-bold">Camera & Zone</th>
+                                <th class="px-5 py-3.5 font-bold">Detected Non-Compliance</th>
+                                <th class="px-5 py-3.5 font-bold">Severity</th>
+                                <th class="px-5 py-3.5 font-bold">Multi-Channel Broadcast</th>
+                                <th class="px-5 py-3.5 font-bold">Audit Status</th>
+                                <th class="px-5 py-3.5 font-bold">Auditing Officer</th>
+                                <th class="px-5 py-3.5 font-bold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-table-body" class="divide-y divide-slate-800/50">
+                            <tr>
+                                <td colspan="8" class="text-center py-12 text-slate-500 font-mono">
+                                    <i data-lucide="loader-2" class="w-6 h-6 mx-auto mb-2 animate-spin text-amber-400"></i>
+                                    Connecting to incident database...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: COMPLIANCE ANALYTICS ==================== -->
+        <div id="tab-view-analytics" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Hourly Violation Trend -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur">
+                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i>
+                        Hourly Incident Volume (Shift A & B)
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="chart-hourly"></canvas>
+                    </div>
+                </div>
+
+                <!-- Missing PPE Breakdown -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur">
+                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-rose-400"></i>
+                        Violations Breakdown by PPE Type
+                    </h3>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="chart-ppe"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zone Risk Heatmap Table -->
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur">
+                <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i>
+                    Zone Risk Ranking & Horn Actuation Frequency
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-950 text-slate-400 font-mono uppercase text-[10px] border-b border-slate-800">
+                            <tr>
+                                <th class="p-3">Camera ID</th>
+                                <th class="p-3">Designated Zone</th>
+                                <th class="p-3">Associated Barix Speaker</th>
+                                <th class="p-3">Total Violations</th>
+                                <th class="p-3">Compliance Score</th>
+                                <th class="p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="zone-risk-tbody" class="divide-y divide-slate-800/60">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: CAMERA & AUDIO ZONES ==================== -->
+        <div id="tab-view-zones" class="space-y-6 hidden">
+            <!-- Dedicated Live Camera Viewport (Red Box Area) -->
+            <div id="live-player-container" class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 backdrop-blur shadow-2xl space-y-4">
+                <div class="flex items-center justify-start gap-4 border-b border-slate-800/80 pb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+                        <h2 id="live-player-title" class="text-base font-bold text-white tracking-wide font-sans">
+                            CAM_05: CPA Castle — Live RTSP Feed
+                        </h2>
+                        <span id="live-player-zone" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-semibold">
+                            Zone E (Hot Work & Structural Assembly)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs font-mono text-slate-400">
+                        <span class="text-emerald-400 font-bold flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> LIVE 25 FPS
+                        </span>
+                        <span>•</span>
+                        <span id="live-player-speaker">Barix Horn: 10.220.148.13:4444</span>
+                    </div>
+                </div>
+
+                <!-- Video Frame Canvas -->
+                <div class="w-full bg-black rounded-2xl overflow-hidden border border-slate-800/80 relative flex items-center justify-center min-h-[460px] max-h-[580px]">
+                    <!-- Interactive Zone Selector Wrapper -->
+
+    <div class="flex items-center justify-between mb-2">
+        <div class="text-xs text-slate-400">
+            Click 4 points on the camera frame to mark the monitoring zone.
+        </div>
+        <div class="flex gap-2">
+            <button type="button" onclick="resetRoiPoints()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded border border-slate-700">Clear Points</button>
+            <button type="button" onclick="saveRoiPoints()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded">Save Active Zone</button>
+        </div>
+    </div>
+    <div id="video-canvas-container" class="relative block w-full min-h-[480px] max-h-[580px] bg-slate-950 rounded-lg flex items-center justify-center overflow-hidden select-none">
+    <canvas id="roi-canvas" class="absolute top-0 left-0 w-full h-full z-20 cursor-crosshair pointer-events-auto"></canvas>
+    <img id="live-stream-img" src="/api/stream/CAM_05"  alt="Live Camera Feed" class="w-full h-full object-contain max-h-[560px]">
+                    
+                    <!-- Overlay Overlay Details -->
+                    <div class="absolute top-4 left-4 bg-slate-950/80 backdrop-blur border border-slate-800 px-3 py-1.5 rounded-xl font-mono text-xs text-slate-300 pointer-events-none flex items-center gap-2">
+                        <i data-lucide="video" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span id="live-player-rtsp">rtsp://10.220.125.9:554/Streaming/Channels/101</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clickable Camera Info Boxes Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <!-- CAM 01 -->
+                <div onclick="selectCamera('CAM_01', 'CAM_01: Main Entrance Gate', 'Zone A - Access Control', 'rtsp://10.220.147.135:554/cam/realmonitor', '10.220.148.13:4444')" 
+                     class="cam-card cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-3 transition transform hover:-translate-y-0.5">
+                    <div class="flex items-center justify-start gap-4">
+                        <span class="font-bold text-white text-sm">CAM_01: Main Entrance Gate</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Zone A - Access Control</p>
+                    <div class="bg-slate-950 rounded-xl p-2.5 font-mono text-[11px] space-y-1 text-slate-300">
+                        <div>RTSP: <span class="text-slate-500">rtsp://10.220.147.135:554/cam/realmonitor</span></div>
+                        <div>Speaker: <span class="text-emerald-400">10.220.148.13:4444</span> (Zone A–E)</div>
+                        <div>Zero Tolerance: <span class="text-rose-400">HELMET, BOOT</span></div>
+                    </div>
+                </div>
+
+                <!-- CAM 02 -->
+                <div onclick="selectCamera('CAM_02', 'CAM_02: Hostel 2 & 3 Entrance', 'Zone B - Hostel Area', 'rtsp://10.220.147.88:554/cam/realmonitor', '10.220.148.13:4444')" 
+                     class="cam-card cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-3 transition transform hover:-translate-y-0.5">
+                    <div class="flex items-center justify-start gap-4">
+                        <span class="font-bold text-white text-sm">CAM_02: Hostel 2 & 3 Entrance</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Zone B - Hostel Area</p>
+                    <div class="bg-slate-950 rounded-xl p-2.5 font-mono text-[11px] space-y-1 text-slate-300">
+                        <div>RTSP: <span class="text-slate-500">rtsp://10.220.147.88:554/cam/realmonitor</span></div>
+                        <div>Speaker: <span class="text-emerald-400">10.220.148.13:4444</span> (Zone A–E)</div>
+                        <div>Zero Tolerance: <span class="text-rose-400">HELMET, VEST, BOOT</span></div>
+                    </div>
+                </div>
+
+                <!-- CAM 03 -->
+                <div onclick="selectCamera('CAM_03', 'CAM_03: MPDP PTJV Gate', 'Zone PLA1 - PTJV Gate', 'rtsp://10.220.125.24:554/cam/realmonitor?channel=1&subtype=0', '10.220.148.13:4444')" 
+                     class="cam-card cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-3 transition transform hover:-translate-y-0.5">
+                    <div class="flex items-center justify-start gap-4">
+                        <span class="font-bold text-white text-sm">CAM_03: MPDP PTJV Gate</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Zone PLA1 - PTJV Gate</p>
+                    <div class="bg-slate-950 rounded-xl p-2.5 font-mono text-[11px] space-y-1 text-slate-300">
+                        <div>RTSP: <span class="text-slate-500">rtsp://10.220.125.24:554/cam/realmonitor?channel=1&subtype=0</span></div>
+                        <div>Speaker: <span class="text-emerald-400">10.220.148.13:4444</span> (Zone A–E)</div>
+                        <div>Zero Tolerance: <span class="text-rose-400">HARNESS, HELMET</span></div>
+                    </div>
+                </div>
+
+                <!-- CAM 04 -->
+                <div onclick="selectCamera('CAM_04', 'CAM_04: Observation Deck', 'Zone D - MPDP Main Gate AREA', 'rtsp://10.220.125.12:554/cam/realmonitor', '10.220.148.13:4444')" 
+                     class="cam-card cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-3 transition transform hover:-translate-y-0.5">
+                    <div class="flex items-center justify-start gap-4">
+                        <span class="font-bold text-white text-sm">CAM_04: Observation Deck</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Zone D - MPDP Main Gate AREA</p>
+                    <div class="bg-slate-950 rounded-xl p-2.5 font-mono text-[11px] space-y-1 text-slate-300">
+                        <div>RTSP: <span class="text-slate-500">rtsp://10.220.125.12:554/cam/realmonitor</span></div>
+                        <div>Speaker: <span class="text-emerald-400">10.220.148.13:4444</span> (Zone A–E)</div>
+                        <div>Zero Tolerance: <span class="text-rose-400">VEST, BOOT</span></div>
+                    </div>
+                </div>
+
+                <!-- CAM 05 -->
+                <div onclick="selectCamera('CAM_05', 'CAM_05: CPA Castle', 'Zone A - Pumping Station Area', 'rtsp://10.220.125.9:554/Streaming/Channels/101', '10.220.148.13:4444')" 
+                     class="cam-card cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-amber-500/40 rounded-2xl p-4 space-y-3 transition transform hover:-translate-y-0.5 shadow-lg shadow-amber-500/5">
+                    <div class="flex items-center justify-start gap-4">
+                        <span class="font-bold text-amber-300 text-sm">CAM_05: CPA Castle</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Zone A - Pumping Station Area</p>
+                    <div class="bg-slate-950 rounded-xl p-2.5 font-mono text-[11px] space-y-1 text-slate-300">
+                        <div>RTSP: <span class="text-slate-500">rtsp://10.220.125.9:554/Streaming/Channels/101</span></div>
+                        <div>Speaker: <span class="text-emerald-400">10.220.148.13:4444</span> (Active Horn)</div>
+                        <div>Zero Tolerance: <span class="text-rose-400">BOOT, HELMET, VEST</span></div>
+                    </div>
+                </div>
+
+                <!-- CAM 06 -->
+                <div onclick="selectCamera('CAM_06', 'CAM_06: KAMACHAN GATE', 'Hostel Area', 'rtsp://10.220.147.60:554/cam/realmonitor', '10.220.148.16:4444')" 
+                     class="cam-card cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 space-y-3 transition transform hover:-translate-y-0.5">
+                    <div class="flex items-center justify-start gap-4">
+                        <span class="font-bold text-white text-sm">CAM_06: KAMACHAN GATE</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Hostel Area</p>
+                    <div class="bg-slate-950 rounded-xl p-2.5 font-mono text-[11px] space-y-1 text-slate-300">
+                        <div>RTSP: <span class="text-slate-500">rtsp://10.220.147.60:554/cam/realmonitor</span></div>
+                        <div>Speaker: <span class="text-amber-400">10.220.148.16:4444</span> (Standby)</div>
+                        <div>Zero Tolerance: <span class="text-rose-400">VEST, BOOT</span></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: SYSTEM HEALTH ==================== -->
+        <div id="tab-view-system" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- System Services -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="server" class="w-4 h-4 text-emerald-400"></i>
+                        Background Daemon Status
+                    </h3>
+                    <div class="space-y-2.5 text-xs font-mono">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-start gap-4">
+                            <div>
+                                <div class="text-white font-bold">cctv-analytics.service</div>
+                                <div class="text-slate-500 text-[10px]">AI Vision Pipeline • YOLO PPE Inference</div>
+                            </div>
+                            <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded">RUNNING (Restart=always)</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-start gap-4">
+                            <div>
+                                <div class="text-white font-bold">cctv-dashboard.service</div>
+                                <div class="text-slate-500 text-[10px]">Flask Web Service on Port 5050</div>
+                            </div>
+                            <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded">RUNNING (Port 5050)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hardware & Broadcast Channels -->
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="radio" class="w-4 h-4 text-cyan-400"></i>
+                        Broadcast Channel Latency & Health
+                    </h3>
+                    <div class="space-y-2.5 text-xs font-mono">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-start gap-4">
+                            <div>
+                                <div class="text-white font-bold">Barix Annuncicom #1 (10.220.148.13)</div>
+                                <div class="text-slate-500 text-[10px]">TOA Amp Relay (/rc.cgi?c=1) + RTP Port 4444</div>
+                            </div>
+                            <span class="text-emerald-400 font-bold">ONLINE (~1.2s delay)</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-start gap-4">
+                            <div>
+                                <div class="text-white font-bold">WhatsApp Group (WAHA Gateway)</div>
+                                <div class="text-slate-500 text-[10px]">ID: 120363432286181800@g.us</div>
+                            </div>
+                            <span class="text-emerald-400 font-bold">ONLINE (~0.8s delivery)</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-start gap-4">
+                            <div>
+                                <div class="text-white font-bold">Telegram Safety Channel Bot</div>
+                                <div class="text-slate-500 text-[10px]">Chat ID: -5463461340</div>
+                            </div>
+                            <span class="text-emerald-400 font-bold">ONLINE (~3.9s delivery)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Interactive Audit Modal with AI Bounding Box & Snapshot Preview -->
+    <div id="audit-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-start gap-4 border-b border-slate-800/80 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-500/20 text-amber-400 p-1.5 rounded-lg border border-amber-500/30">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                    </span>
+                    <h3 class="font-bold text-white text-base">
+                        Audit Incident <span id="modal-id" class="font-mono text-amber-400">#INC-0000</span>
+                    </h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Visual Inference Snapshot -->
+                <div class="bg-slate-950 rounded-2xl border border-slate-800 flex flex-col items-center justify-center overflow-hidden min-h-[260px] relative">
+                    <img id="modal-img" src="" alt="Violation Snapshot" class="max-h-[250px] w-auto object-contain">
+                    <div id="modal-img-fallback" class="hidden text-center p-6 text-slate-500 font-mono text-xs">
+                        <i data-lucide="image-off" class="w-8 h-8 mx-auto mb-2 text-slate-600"></i>
+                        Snapshot archived or awaiting capture
+                    </div>
+                </div>
+
+                <!-- Incident Metadata & Review Form -->
+                <div class="space-y-3.5 text-xs">
+                    <div>
+                        <div class="text-[10px] uppercase font-mono text-slate-500">Camera & Location</div>
+                        <div id="modal-zone" class="font-bold text-slate-200 text-sm mt-0.5"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase font-mono text-slate-500">Detected Non-Compliance</div>
+                        <div id="modal-type" class="text-amber-400 font-mono font-bold text-sm mt-0.5"></div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-mono text-slate-400 block mb-1">Contractor / Subcontractor Organization</label>
+                        <input id="modal-contractor" type="text" placeholder="e.g. PetroSteel Subcontractor Ltd." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-mono text-slate-400 block mb-1">HSE Officer Audit Notes / Actions</label>
+                        <textarea id="modal-notes" rows="3" placeholder="Document site warning, fine issuance, or toolbox talk..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex items-center justify-start gap-4 pt-3 border-t border-slate-800/80">
+                <button onclick="saveAudit('FALSE_POSITIVE')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition">
+                    Mark False Positive
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="saveAudit('ACTION_TAKEN')" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition">
+                        Action Taken
+                    </button>
+                    <button onclick="saveAudit('APPROVED')" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition shadow-lg shadow-emerald-600/20">
+                        Confirm & Approve Violation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Application Logic -->
+    <script>
+        let rawIncidents = [];
+        let currentModalIncident = null;
+
+        // Real-Time Server Clock Synchronization
+        async function syncServerTime() {
+            try {
+                const res = await fetch('/api/time');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('header-clock').innerText = data.time;
+                    document.getElementById('header-shift').innerText = data.shift;
+                }
+            } catch (e) {
+                // Fallback to local machine clock if network blips
+                const now = new Date();
+                document.getElementById('header-clock').innerText = now.toTimeString().split(' ')[0];
+            }
+        }
+        syncServerTime();
+        setInterval(syncServerTime, 1000);
+
+        // Tab Switching
+        let activeStreamInterval = null;
+        let activeCamId = 'CAM_03';
+
+        function refreshCameraFeed() {
+            if (!activeCamId) return;
+            const img = document.getElementById('live-stream-img');
+            const nextImg = new Image();
+            nextImg.src = `/api/frame/${activeCamId}?t=${Date.now()}`;
+            nextImg.onload = () => {
+                img.src = nextImg.src;
+                img.classList.remove('opacity-40');
+            };
+            nextImg.onerror = () => {
+                img.classList.add('opacity-40');
+            };
+        }
+
+        function selectCamera(camId, name, zone, rtsp, speaker) {
+            activeCamId = camId;
+            document.getElementById('live-player-title').innerText = `${name} — Live Camera View`;
+            document.getElementById('live-player-zone').innerText = zone;
+            document.getElementById('live-player-rtsp').innerText = rtsp;
+            document.getElementById('live-player-speaker').innerText = `Barix Horn: ${speaker}`;
+
+            refreshCameraFeed();
+
+            if (activeStreamInterval) clearInterval(activeStreamInterval);
+            activeStreamInterval = setInterval(refreshCameraFeed, 600);
+
+            document.getElementById('live-player-container').scrollIntoView({ behavior: 'smooth' });
+            lucide.createIcons();
+        }
+
+        
+// Tab switching matched to index.html container IDs
+// Tab switching matched to index.html container IDs
+function switchTab(tabId) {
+    const validTabs = ['queue', 'analytics', 'zones', 'system'];
+    if (!validTabs.includes(tabId)) {
+        if (tabId === 'health') tabId = 'system';
+    }
+
+    // 1. Hide all tab containers and remove active style from buttons
+    validTabs.forEach(t => {
+        const viewEl = document.getElementById(`tab-view-${t}`);
+        if (viewEl) {
+            viewEl.classList.add('hidden');
+        }
+        const btnEl = document.getElementById(`tab-btn-${t}`);
+        if (btnEl) {
+            btnEl.classList.remove('tab-active');
+            btnEl.classList.add('tab-inactive');
+        }
+    });
+
+    // 2. Show selected tab container and apply active style to its button
+    const activeView = document.getElementById(`tab-view-${tabId}`);
+    if (activeView) {
+        activeView.classList.remove('hidden');
+    }
+
+    const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+    if (activeBtn) {
+        activeBtn.classList.add('tab-active');
+        activeBtn.classList.remove('tab-inactive');
+    }
+
+    // 3. Disconnect/connect camera video stream to eliminate background load
+    const streamImg = document.getElementById("live-stream-img");
+    if (streamImg) {
+        if (tabId === 'zones') {
+            const cam = (typeof currentCamId !== 'undefined' && currentCamId) ? currentCamId : 'CAM_05';
+            streamImg.src = `/api/stream/${cam}?t=` + Date.now();
+        } else {
+            streamImg.src = ""; // Cut MJPEG connection
+        }
+    }
+}
+function initRoiCanvas() {
+    const canvas = document.getElementById("roi-canvas");
+    const img = document.getElementById("live-stream-img");
+    if (!canvas || !img) return;
+
+    function resizeCanvas() {
+        canvas.width = img.clientWidth;
+        canvas.height = img.clientHeight;
+        drawPolygon();
+    }
+
+    img.onload = resizeCanvas;
+    window.addEventListener("resize", resizeCanvas);
+    setTimeout(resizeCanvas, 500);
+
+    canvas.addEventListener("click", function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const normX = parseFloat(((e.clientX - rect.left) / canvas.width).toFixed(3));
+        const normY = parseFloat(((e.clientY - rect.top) / canvas.height).toFixed(3));
+
+        if (roiPoints.length >= 4) {
+            roiPoints = [];
+        }
+        roiPoints.push([normX, normY]);
+        drawPolygon();
+    });
+}
+
+function drawPolygon() {
+    const canvas = document.getElementById("roi-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (roiPoints.length === 0) return;
+
+    ctx.strokeStyle = "#38bdf8";
+    ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    for (let i = 0; i < roiPoints.length; i++) {
+        const px = roiPoints[i][0] * canvas.width;
+        const py = roiPoints[i][1] * canvas.height;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+
+        // Draw anchor dot
+        ctx.fillStyle = "#f59e0b";
+        ctx.fillRect(px - 4, py - 4, 8, 8);
+        ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+    }
+
+    if (roiPoints.length >= 3) {
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.stroke();
+}
+
+function resetRoiPoints() {
+    roiPoints = [];
+    drawPolygon();
+}
+
+function saveRoiPoints() {
+    if (roiPoints.length < 3) {
+        alert("Please click at least 3 or 4 points to form a zone boundary.");
+        return;
+    }
+    fetch(`/api/cameras/${currentCamId}/roi`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roi: roiPoints })
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert("Monitoring zone saved successfully!");
+    })
+    .catch(err => {
+        alert("Failed to save monitoring zone.");
+        console.error(err);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initRoiCanvas);
+</script>
+
+<script>
+// Global variables
+let currentCamId = "CAM_05";
+let roiPoints = [];
+
+// Tab switching
+function switchTab(tabId) {
+    console.log("Switching to tab:", tabId);
+    
+    // Hide all tabs
+    const sections = ['queue', 'analytics', 'zones', 'health'];
+    sections.forEach(s => {
+        const el = document.getElementById(`tab-${s}`) || 
+                   document.getElementById(`${s}-tab`) || 
+                   document.getElementById(`section-${s}`);
+        if (el) el.classList.add('hidden');
+    });
+
+    // Show active tab
+    const activeEl = document.getElementById(`tab-${tabId}`) || 
+                     document.getElementById(`${tabId}-tab`) || 
+                     document.getElementById(`section-${tabId}`);
+    if (activeEl) {
+        activeEl.classList.remove('hidden');
+    }
+
+    // Toggle live stream to protect performance
+    const streamImg = document.getElementById("live-stream-img");
+    if (streamImg) {
+        if (tabId === 'zones') {
+            streamImg.src = `/api/stream/${currentCamId}?t=` + Date.now();
+        } else {
+            streamImg.src = "";
+        }
+    }
+}
+
+// Camera selector
+function selectCamera(camId, camName) {
+    currentCamId = camId;
+    const streamImg = document.getElementById("live-stream-img");
+    if (streamImg) {
+        streamImg.src = `/api/stream/${camId}?t=` + Date.now();
+    }
+    if (typeof resetRoiPoints === "function") {
+        resetRoiPoints();
+    }
+}
+
+// Snapshot modal / direct viewer
+function openSnapshot(url) {
+    if (url) {
+        window.open(url, '_blank');
+    }
+}
+
+// Periodic incident polling
+function loadViolations() {
+    fetch('/api/violations?limit=100')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById("violations-tbody") || document.querySelector("tbody");
+            if (!tbody || !data || data.length === 0) return;
+
+            let htmlRows = "";
+            data.forEach(v => {
+                const snapUrl = v.snapshot_path ? `/api/snapshot?path=${encodeURIComponent(v.snapshot_path)}` : '';
+                const statusBadge = v.audit_status === 'APPROVED' ? 
+                    '<span class="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">APPROVED</span>' :
+                    '<span class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">PENDING</span>';
+
+                htmlRows += `<tr class="border-b border-slate-800 hover:bg-slate-800/40 text-xs">
+                    <td class="py-3 px-3 font-mono text-slate-300">#${v.id}<br><span class="text-slate-500 text-[11px]">${v.timestamp}</span></td>
+                    <td class="py-3 px-3 font-medium text-slate-200">${v.camera_id}<br><span class="text-slate-400 text-[11px]">${v.zone}</span></td>
+                    <td class="py-3 px-3"><span class="text-rose-400 font-semibold">${v.violation_type}</span><br><span class="text-slate-500 text-[11px]">${v.persistence_seconds || 3.5}s persistence</span></td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/10 text-rose-400 border border-rose-500/20">${v.severity || 'WARNING'}</span></td>
+                    <td class="py-3 px-3 text-slate-400">TG Bot: Sent<br>Horn: Triggered</td>
+                    <td class="py-3 px-3">${statusBadge}</td>
+                    <td class="py-3 px-3 text-slate-400">${v.contractor_id || 'Unassigned'}</td>
+                    <td class="py-3 px-3 text-right">
+                        ${snapUrl ? `<button type="button" onclick="openSnapshot('${snapUrl}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 text-xs">Snapshot</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = htmlRows;
+        })
+        .catch(err => console.error("Poll error:", err));
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadViolations();
+    setInterval(loadViolations, 4000);
+});
+</script>
+</body>
+</html>

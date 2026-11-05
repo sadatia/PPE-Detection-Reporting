@@ -1,0 +1,59 @@
+cameras:
+- id: CAM_01
+  name: Main Entrance Gate
+  zone: Zone A - Access Control
+  rtsp_url: rtsp://admin:aqashi888@10.220.147.135:554/cam/realmonitor?channel=1&subtype=0
+  toa_speaker_ip: 10.220.148.13
+  enabled: true
+  roi: []
+- id: CAM_02
+  name: Hostel 2 & 3 Entrance
+  zone: Zone B - Hostel Area
+  rtsp_url: rtsp://admin:aqashi888@10.220.147.88:554/cam/realmonitor?channel=1&subtype=0
+  toa_speaker_ip: 10.220.148.13
+  enabled: true
+  roi: []
+- id: CAM_03
+  name: MPDP PTJV Gate
+  zone: Zone PLA1 - PTJV Gate
+  rtsp_url: rtsp://admin:aqashi888@10.220.125.24:554/cam/realmonitor?channel=1&subtype=0
+  toa_speaker_ip: 10.220.148.13
+  enabled: true
+  roi:
+  - - 0.0
+    - 0.2
+  - - 0.82
+    - 0.2
+  - - 0.82
+    - 0.98
+  - - 0.0
+    - 0.98
+- id: CAM_04
+  name: Observation Deck
+  zone: Zone D - MPDP Main Gate AREA
+  rtsp_url: rtsp://admin:aqashi888@10.220.125.12:554/cam/realmonitor?channel=1&subtype=0
+  toa_speaker_ip: 10.220.148.13
+  enabled: false
+  roi: []
+- id: CAM_05
+  name: CPA Castle
+  zone: Zone A - Pumping Station Area
+  rtsp_url: rtsp://admin:hik-1234@10.220.125.9:554/Streaming/Channels/101
+  toa_speaker_ip: 10.220.148.13
+  enabled: false
+  roi:
+  - - 0.21
+    - 0.793
+  - - 0.289
+    - 0.452
+  - - 0.65
+    - 0.563
+  - - 0.535
+    - 0.98
+- id: CAM_06
+  name: KAMACHAN GATE
+  zone: Hostel Area
+  rtsp_url: rtsp://admin:aqashi888@10.220.147.60:554/cam/realmonitor?channel=1&subtype=0
+  toa_speaker_ip: 10.220.148.16
+  enabled: true
+  roi: []

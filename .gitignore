@@ -1,0 +1,21 @@
+# Virtual environment & Python cache
+venv/
+__pycache__/
+*.py[cod]
+
+# Model weights & large binaries (>100MB)
+*.pt
+*.onnx
+*.engine
+
+# Media & local storage mounts
+dataset/
+snapshots/
+runs/
+*.jpg
+*.png
+*.mp4
+
+# Environment and sensitive keys
+.env
+config/secrets.yaml

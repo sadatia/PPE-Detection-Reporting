@@ -1,0 +1,23 @@
+detection_rules:
+  thresholds:
+    day:
+      person: 0.45
+      vest: 0.4
+      helmet: 0.45
+      boot: 0.35
+    night:
+      person: 0.52
+      vest: 0.35
+      helmet: 0.55
+      boot: 0.35
+  timing:
+    ppe_persistence_seconds: 3.5
+    fire_persistence_seconds: 1.0
+    cooldown_seconds: 240.0
+  filters:
+    ignore_occluded_boots: true
+  barix_messages:
+    missing_helmet_warning: 1
+    missing_vest_warning: 2
+    missing_boot_warning: 3
+    fire_evacuation: 4
