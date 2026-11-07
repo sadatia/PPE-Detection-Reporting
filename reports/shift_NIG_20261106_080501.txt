@@ -1,0 +1,25 @@
+==================================================
+  PTJV MPDP-PK1 — HSE SHIFT AUDIT REPORT
+  Shift: NIGHT SHIFT (17:00 - 08:00)
+  Report Time: 2026-11-06 08:05:01 (Window: Last 15 Hours)
+==================================================
+Total Non-Compliance Events: 324
+Pending HSE Review:          226
+Acknowledged / Approved:     74
+--------------------------------------------------
+INFRACTIONS BY VIOLATION TYPE:
+  • MISSING PPE: VEST           :  109
+  • MISSING PPE: HELMET, VEST   :   94
+  • MISSING PPE: BOOT           :   46
+  • MISSING PPE: HELMET         :   41
+  • MISSING PPE: BOOT, VEST     :   20
+  • MISSING PPE: BOOT, HELMET, VEST:    9
+  • MISSING PPE: BOOT, HELMET   :    5
+--------------------------------------------------
+INFRACTIONS BY CAMERA ZONE:
+  • CAM_01      :  148 events
+  • CAM_02      :   17 events
+  • CAM_03      :   78 events
+  • CAM_04      :    1 events
+  • CAM_06      :   80 events
+==================================================

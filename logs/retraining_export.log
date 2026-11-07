@@ -1,0 +1,18 @@
+[+] Found 2 record(s) marked as FALSE_POSITIVE. Processing export...
+-----------------------------------------------------------------
+[✓] Harvest Completed:
+    • Newly Copied:     0
+    • Already Present:  2
+    • Missing Snapshots: 0
+    • Manifest Saved:   /mnt/synology_cctv/dataset/hard_negatives/manifest.json
+    • Target Root:      /mnt/synology_cctv/dataset/hard_negatives
+-----------------------------------------------------------------
+[+] Found 2 record(s) marked as FALSE_POSITIVE. Processing export...
+-----------------------------------------------------------------
+[✓] Harvest Completed:
+    • Newly Copied:     0
+    • Already Present:  2
+    • Missing Snapshots: 0
+    • Manifest Saved:   /mnt/synology_cctv/dataset/hard_negatives/manifest.json
+    • Target Root:      /mnt/synology_cctv/dataset/hard_negatives
+-----------------------------------------------------------------
