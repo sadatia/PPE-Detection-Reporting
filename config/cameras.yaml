@@ -33,14 +33,14 @@ cameras:
   zone: Zone D - MPDP Main Gate AREA
   rtsp_url: rtsp://admin:aqashi888@10.220.125.12:554/cam/realmonitor?channel=1&subtype=0
   toa_speaker_ip: 10.220.148.13
-  enabled: false
+  enabled: true
   roi: []
 - id: CAM_05
   name: CPA Castle
   zone: Zone A - Pumping Station Area
   rtsp_url: rtsp://admin:hik-1234@10.220.125.9:554/Streaming/Channels/101
   toa_speaker_ip: 10.220.148.13
-  enabled: false
+  enabled: true
   roi:
   - - 0.21
     - 0.793

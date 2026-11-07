@@ -155,7 +155,13 @@ def get_live_camera_snapshot(cam_id, res="low"):
         if m:
             user, pwd, ip = m.groups()
             # 1. Native Low-Res Hardware Snapshot (?channel=1&subtype=1)
-        url = f"http://{ip}/cgi-bin/snapshot.cgi?channel=1&subtype=1" if res == "low" else f"http://{ip}/cgi-bin/snapshot.cgi"
+        # Handle Hikvision vs Dahua HTTP snapshot paths
+        if "Streaming/Channels" in rtsp_url or "hik" in pwd.lower():
+            # Hikvision ISAPI: Channel 102 (substream) or 101 (main)
+            url = f"http://{ip}/ISAPI/Streaming/channels/102/picture" if res == "low" else f"http://{ip}/ISAPI/Streaming/channels/101/picture"
+        else:
+            # Dahua native snapshot
+            url = f"http://{ip}/cgi-bin/snapshot.cgi?channel=1&subtype=1" if res == "low" else f"http://{ip}/cgi-bin/snapshot.cgi"
         mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         mgr.add_password(None, url, user, pwd)
         handler = urllib.request.HTTPDigestAuthHandler(mgr)
