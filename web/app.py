@@ -611,24 +611,37 @@ def get_map_data():
         with open("/home/zeus/ai-cctv/config/cameras.yaml", "r") as f:
             cfg = yaml.safe_load(f)
         
-        incident_map = {}
+        today_alerts = {}
+        total_24h = {}
         try:
             conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
             cur = conn.cursor()
+            
+            # Alerts recorded today (since local 00:00:00)
+            cur.execute("""
+                SELECT camera_id, COUNT(*) 
+                FROM violations 
+                WHERE date(timestamp) = date('now', 'localtime')
+                GROUP BY camera_id
+            """)
+            today_alerts = dict(cur.fetchall())
+            
+            # Alerts in past 24 hours
             cur.execute("""
                 SELECT camera_id, COUNT(*) 
                 FROM violations 
                 WHERE timestamp >= datetime('now', '-24 hours')
                 GROUP BY camera_id
             """)
-            incident_map = dict(cur.fetchall())
+            total_24h = dict(cur.fetchall())
             conn.close()
         except Exception:
             try:
                 conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
                 cur = conn.cursor()
                 cur.execute("SELECT camera_id, COUNT(*) FROM violations GROUP BY camera_id")
-                incident_map = dict(cur.fetchall())
+                today_alerts = dict(cur.fetchall())
+                total_24h = today_alerts.copy()
                 conn.close()
             except Exception:
                 pass
@@ -643,25 +656,32 @@ def get_map_data():
         }
 
         nodes = []
+        total_today_count = 0
         for c in cfg.get("cameras", []):
             cid = c.get("id")
             lat = c.get("latitude") or coords_map.get(cid, (None, None))[0]
             lng = c.get("longitude") or coords_map.get(cid, (None, None))[1]
             if lat and lng:
-                count = incident_map.get(cid, 0)
+                count_today = today_alerts.get(cid, 0)
+                total_today_count += count_today
                 nodes.append({
                     "id": cid,
                     "name": c.get("name"),
                     "zone": c.get("zone"),
                     "lat": float(lat),
                     "lng": float(lng),
-                    "violations_24h": count,
-                    "intensity": min(1.0, 0.25 + (count * 0.12))
+                    "alerts_today": count_today,
+                    "violations_24h": total_24h.get(cid, 0),
+                    "intensity": min(1.0, 0.25 + (count_today * 0.08))
                 })
-        return jsonify({"status": "success", "cameras": nodes})
+
+        return jsonify({
+            "status": "success", 
+            "total_today": total_today_count,
+            "cameras": nodes
+        })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)

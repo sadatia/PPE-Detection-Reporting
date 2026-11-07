@@ -50,6 +50,35 @@
         .leaflet-popup-content-wrapper { background: #0f172a !important; color: #f8fafc !important; border: 1px solid #334155 !important; border-radius: 0.75rem !important; }
         .leaflet-popup-tip { background: #0f172a !important; }
     </style>
+
+    <style>
+        .camera-map-label {
+            background: rgba(15, 23, 42, 0.88) !important;
+            border: 1px solid rgba(51, 65, 85, 0.8) !important;
+            border-radius: 6px !important;
+            color: #f8fafc !important;
+            padding: 3px 8px !important;
+            font-family: monospace !important;
+            font-size: 10px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+            pointer-events: none;
+        }
+        .camera-map-label::before { border-top-color: rgba(15, 23, 42, 0.88) !important; }
+        .map-hud-overlay {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            background: rgba(10, 15, 29, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            border-radius: 12px;
+            padding: 10px 14px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
+        }
+    </style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-6 space-y-4">
 
@@ -382,7 +411,28 @@
                     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Critical Area (6+)</span>
                 </div>
             </div>
-            <div id="site-geospatial-map" style="height: 620px; width: 100%; border-radius: 1rem; position: relative;"></div>
+            
+            <div style="position: relative; width: 100%; height: 620px;">
+                <!-- FLOATING HUD SUMMARY OVERLAY -->
+                <div class="map-hud-overlay flex items-center gap-4 text-xs font-mono">
+                    <div>
+                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Site Violations (Today)</div>
+                        <div id="hud-total-alerts" class="text-base font-black text-red-400">--</div>
+                    </div>
+                    <div class="h-6 w-px bg-slate-700"></div>
+                    <div>
+                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">High-Risk Node</div>
+                        <div id="hud-top-cam" class="text-xs font-black text-amber-400">Analyzing...</div>
+                    </div>
+                    <div class="h-6 w-px bg-slate-700"></div>
+                    <div>
+                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Monitored Matrix</div>
+                        <div class="text-xs font-bold text-emerald-400">6 / 6 Active</div>
+                    </div>
+                </div>
+                <div id="site-geospatial-map" style="height: 100%; width: 100%; border-radius: 1rem;"></div>
+            </div>
+
         </div>
     </section>
 
@@ -1131,32 +1181,54 @@ function initSiteMap() {
             var heatPoints = [];
             var bounds = [];
 
+            var topCam = { id: '--', count: -1 };
+
             res.cameras.forEach(function(cam) {
                 var lat = cam.lat;
                 var lng = cam.lng;
                 bounds.push([lat, lng]);
 
-                var markerColor = cam.violations_24h > 50 ? '#ef4444' : (cam.violations_24h > 10 ? '#f59e0b' : '#10b981');
+                if (cam.alerts_today > topCam.count) {
+                    topCam = { id: cam.id + ' (' + cam.name + ')', count: cam.alerts_today };
+                }
 
+                var badgeBg = cam.alerts_today > 50 ? '#ef4444' : (cam.alerts_today > 10 ? '#f59e0b' : '#10b981');
+
+                // Marker Circle
                 var marker = L.circleMarker([lat, lng], {
                     radius: 8,
-                    fillColor: markerColor,
+                    fillColor: badgeBg,
                     color: '#ffffff',
                     weight: 2,
                     opacity: 1,
                     fillOpacity: 0.95
                 }).addTo(siteMapInstance);
 
-                var popupHtml = '<div style="font-family: monospace; font-size: 11px; min-width: 180px;">' +
+                // Permanent tooltip label above marker
+                var tooltipText = `<span style="font-weight:700; color:#38bdf8;">${cam.id}</span>: ${cam.name} &bull; <strong style="color:${badgeBg};">${cam.alerts_today} alerts today</strong>`;
+                marker.bindTooltip(tooltipText, {
+                    permanent: true,
+                    direction: 'top',
+                    offset: [0, -10],
+                    className: 'camera-map-label'
+                });
+
+                var popupHtml = '<div style="font-family: monospace; font-size: 11px; min-width: 190px;">' +
                     '<div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px; font-size: 13px;">' + cam.id + ' — ' + cam.name + '</div>' +
                     '<div style="color: #cbd5e1; margin-bottom: 2px;">Zone: ' + cam.zone + '</div>' +
-                    '<div style="color: #cbd5e1; margin-bottom: 6px;">24h Violations: <strong style="color: #f87171;">' + cam.violations_24h + '</strong></div>' +
+                    '<div style="color: #cbd5e1; margin-bottom: 6px;">Today Alerts: <strong style="color: #f87171;">' + cam.alerts_today + '</strong></div>' +
                     '<img src="/api/camera_frame/' + cam.id + '?res=low&t=' + Date.now() + '" style="width: 100%; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #334155;" />' +
                     '</div>';
 
                 marker.bindPopup(popupHtml);
                 heatPoints.push([lat, lng, cam.intensity]);
             });
+
+            // Update Floating HUD
+            var totalElem = document.getElementById('hud-total-alerts');
+            var topCamElem = document.getElementById('hud-top-cam');
+            if (totalElem) totalElem.innerText = (res.total_today || 0) + ' Events';
+            if (topCamElem) topCamElem.innerText = topCam.id;
 
             // Initialize Heatmap
             if (typeof L.heatLayer === 'function') {
