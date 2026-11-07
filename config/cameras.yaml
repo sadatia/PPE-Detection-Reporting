@@ -6,6 +6,8 @@ cameras:
   toa_speaker_ip: 10.220.148.13
   enabled: true
   roi: []
+  latitude: 21.6948001
+  longitude: 91.885251
 - id: CAM_02
   name: Hostel 2 & 3 Entrance
   zone: Zone B - Hostel Area
@@ -13,6 +15,8 @@ cameras:
   toa_speaker_ip: 10.220.148.13
   enabled: true
   roi: []
+  latitude: 21.694942
+  longitude: 91.885064
 - id: CAM_03
   name: MPDP PTJV Gate
   zone: Zone PLA1 - PTJV Gate
@@ -28,6 +32,8 @@ cameras:
     - 0.98
   - - 0.0
     - 0.98
+  latitude: 21.697949
+  longitude: 91.874648
 - id: CAM_04
   name: Observation Deck
   zone: Zone D - MPDP Main Gate AREA
@@ -35,6 +41,8 @@ cameras:
   toa_speaker_ip: 10.220.148.13
   enabled: true
   roi: []
+  latitude: 21.698129
+  longitude: 91.867494
 - id: CAM_05
   name: CPA Castle
   zone: Zone A - Pumping Station Area
@@ -50,6 +58,8 @@ cameras:
     - 0.563
   - - 0.535
     - 0.98
+  latitude: 21.688249
+  longitude: 91.859531
 - id: CAM_06
   name: KAMACHAN GATE
   zone: Hostel Area
@@ -57,3 +67,5 @@ cameras:
   toa_speaker_ip: 10.220.148.16
   enabled: true
   roi: []
+  latitude: 21.695182
+  longitude: 91.885062

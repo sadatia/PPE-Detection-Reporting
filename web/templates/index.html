@@ -30,6 +30,26 @@
         ::-webkit-scrollbar-track { background: #0b1120; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
     </style>
+
+    <!-- Leaflet & Heatmap CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <style>
+        #site-geospatial-map { height: 640px; width: 100%; border-radius: 1rem; z-index: 10; }
+        .leaflet-popup-content-wrapper { background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 0.75rem; }
+        .leaflet-popup-tip { background: #0f172a; }
+    </style>
+
+    <!-- Leaflet Assets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <style>
+        #site-geospatial-map { height: 640px; width: 100%; border-radius: 1rem; z-index: 1; }
+        .leaflet-popup-content-wrapper { background: #0f172a !important; color: #f8fafc !important; border: 1px solid #334155 !important; border-radius: 0.75rem !important; }
+        .leaflet-popup-tip { background: #0f172a !important; }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-6 space-y-4">
 
@@ -157,6 +177,12 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
                 SYSTEM PERFORMANCE MONITORING
             </button>
+            
+            <button onclick="switchTab('MAP')" id="tab-btn-MAP" class="tab-btn inactive px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 whitespace-nowrap transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                GEOSPATIAL SITE MAP & HEATMAP
+            </button>
+
             <button onclick="switchTab('ANALYTICS')" id="tab-btn-ANALYTICS" class="tab-btn inactive px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 whitespace-nowrap transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 COMPLIANCE HEATMAP & ANALYTICS
@@ -339,6 +365,27 @@
     </section>
 
     <!-- ========================================== -->
+    
+    <!-- ========================================== -->
+    <!-- TAB 5: GEOSPATIAL SITE MAP & HEATMAP       -->
+    <!-- ========================================== -->
+    <section id="tab-view-MAP" class="hidden space-y-4">
+        <div class="glass-card p-4 rounded-2xl border border-slate-800">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-slate-800/80 mb-3">
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-mono">Matarbari Port Project — Camera Matrix & Violation Heatmap</h3>
+                    <p class="text-xs text-slate-400">Live geographic distribution of optical nodes with 24h safety violation density overlays</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-mono">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Normal (0-2)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Moderate (3-5)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Critical Area (6+)</span>
+                </div>
+            </div>
+            <div id="site-geospatial-map" style="height: 620px; width: 100%; border-radius: 1rem; position: relative;"></div>
+        </div>
+    </section>
+
     <!-- TAB 4: COMPLIANCE HEATMAP & ANALYTICS (IMPROVED) -->
     <!-- ========================================== -->
     <section id="tab-view-ANALYTICS" class="space-y-4 hidden">
@@ -491,7 +538,7 @@
 
         function switchTab(tabId) {
             activeTab = tabId;
-            var tabs = ['GRID', 'LOGS', 'PERFORMANCE', 'ANALYTICS'];
+            var tabs = ['GRID', 'LOGS', 'PERFORMANCE', 'ANALYTICS', 'MAP'];
             tabs.forEach(function(t) {
                 var sec = document.getElementById('tab-view-' + t);
                 var btn = document.getElementById('tab-btn-' + t);
@@ -510,7 +557,7 @@
                 activeBtn.classList.remove('inactive');
             }
 
-            if (tabId === 'GRID') {
+            if (tabId === 'MAP') { setTimeout(function(){ initSiteMap(); if(siteMapInstance) siteMapInstance.invalidateSize(); }, 150); } else if (tabId === 'GRID') {
                 renderCameraGrid();
                 startAllStreams();
             } else if (tabId === 'ANALYTICS') {
@@ -1053,5 +1100,83 @@ function triggerSimulatedFireTest() {
 }
 </script>
 
+<script>
+
+var siteMapInstance = null;
+var heatLayerInstance = null;
+
+function initSiteMap() {
+    var mapContainer = document.getElementById('site-geospatial-map');
+    if (!mapContainer) return;
+
+    if (siteMapInstance) {
+        siteMapInstance.invalidateSize();
+        return;
+    }
+
+    // Centered between Matarbari Access Gate & CPA Castle
+    siteMapInstance = L.map('site-geospatial-map', {
+        attributionControl: false
+    }).setView([21.6948, 91.8750], 14);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(siteMapInstance);
+
+    fetch('/api/map_data')
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.status !== 'success') return;
+
+            var heatPoints = [];
+            var bounds = [];
+
+            res.cameras.forEach(function(cam) {
+                var lat = cam.lat;
+                var lng = cam.lng;
+                bounds.push([lat, lng]);
+
+                var markerColor = cam.violations_24h > 50 ? '#ef4444' : (cam.violations_24h > 10 ? '#f59e0b' : '#10b981');
+
+                var marker = L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: markerColor,
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.95
+                }).addTo(siteMapInstance);
+
+                var popupHtml = '<div style="font-family: monospace; font-size: 11px; min-width: 180px;">' +
+                    '<div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px; font-size: 13px;">' + cam.id + ' — ' + cam.name + '</div>' +
+                    '<div style="color: #cbd5e1; margin-bottom: 2px;">Zone: ' + cam.zone + '</div>' +
+                    '<div style="color: #cbd5e1; margin-bottom: 6px;">24h Violations: <strong style="color: #f87171;">' + cam.violations_24h + '</strong></div>' +
+                    '<img src="/api/camera_frame/' + cam.id + '?res=low&t=' + Date.now() + '" style="width: 100%; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #334155;" />' +
+                    '</div>';
+
+                marker.bindPopup(popupHtml);
+                heatPoints.push([lat, lng, cam.intensity]);
+            });
+
+            // Initialize Heatmap
+            if (typeof L.heatLayer === 'function') {
+                heatLayerInstance = L.heatLayer(heatPoints, {
+                    radius: 35,
+                    blur: 20,
+                    maxZoom: 16,
+                    gradient: { 0.2: '#10b981', 0.5: '#f59e0b', 0.8: '#ef4444' }
+                }).addTo(siteMapInstance);
+            }
+
+            if (bounds.length > 0) {
+                siteMapInstance.fitBounds(bounds, { padding: [40, 40] });
+            }
+        })
+        .catch(function(err) {
+            console.error('[MapData Error]:', err);
+        });
+}
+
+</script>
 </body>
 </html>

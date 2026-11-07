@@ -603,6 +603,66 @@ def get_snapshot_evidence(violation_id):
     return Response("Snapshot image not found on disk", status=404)
 
 
+
+@app.route("/api/map_data")
+def get_map_data():
+    import yaml, sqlite3
+    try:
+        with open("/home/zeus/ai-cctv/config/cameras.yaml", "r") as f:
+            cfg = yaml.safe_load(f)
+        
+        incident_map = {}
+        try:
+            conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT camera_id, COUNT(*) 
+                FROM violations 
+                WHERE timestamp >= datetime('now', '-24 hours')
+                GROUP BY camera_id
+            """)
+            incident_map = dict(cur.fetchall())
+            conn.close()
+        except Exception:
+            try:
+                conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
+                cur = conn.cursor()
+                cur.execute("SELECT camera_id, COUNT(*) FROM violations GROUP BY camera_id")
+                incident_map = dict(cur.fetchall())
+                conn.close()
+            except Exception:
+                pass
+
+        coords_map = {
+            "CAM_01": (21.6948001, 91.885251),
+            "CAM_02": (21.694942, 91.885064),
+            "CAM_03": (21.697949, 91.874648),
+            "CAM_04": (21.698129, 91.867494),
+            "CAM_05": (21.688249, 91.859531),
+            "CAM_06": (21.695182, 91.885062)
+        }
+
+        nodes = []
+        for c in cfg.get("cameras", []):
+            cid = c.get("id")
+            lat = c.get("latitude") or coords_map.get(cid, (None, None))[0]
+            lng = c.get("longitude") or coords_map.get(cid, (None, None))[1]
+            if lat and lng:
+                count = incident_map.get(cid, 0)
+                nodes.append({
+                    "id": cid,
+                    "name": c.get("name"),
+                    "zone": c.get("zone"),
+                    "lat": float(lat),
+                    "lng": float(lng),
+                    "violations_24h": count,
+                    "intensity": min(1.0, 0.25 + (count * 0.12))
+                })
+        return jsonify({"status": "success", "cameras": nodes})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)
 
@@ -651,3 +711,5 @@ def manage_thresholds():
             return jsonify({"status": "success", "message": "Configuration saved to disk"})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
+
+
