@@ -409,6 +409,10 @@
                     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Normal (0-2)</span>
                     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Moderate (3-5)</span>
                     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Critical Area (6+)</span>
+                    <span class="h-4 w-px bg-slate-700 mx-1"></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-2 border border-cyan-400 bg-cyan-500/30 inline-block"></span> Area A</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-2 border border-amber-400 bg-amber-500/30 inline-block"></span> Area B</span>
+
                 </div>
             </div>
             
@@ -1172,6 +1176,37 @@ function initSiteMap() {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19
     }).addTo(siteMapInstance);
+
+    // Area Boundaries Definition
+    var areaA_coords = [[21.697611, 91.868983], [21.692192, 91.868206], [21.691033, 91.86815], [21.690881, 91.863611], [21.689425, 91.863606], [21.689308, 91.862561], [21.686414, 91.862394], [21.686597, 91.858758], [21.686797, 91.858533], [21.691731, 91.858511], [21.6918, 91.858331], [21.693931, 91.858342], [21.693914, 91.859814], [21.694344, 91.860544], [21.694111, 91.861972], [21.696922, 91.865186], [21.697625, 91.866422]];
+    var areaB_coords = [[21.681522, 91.862694], [21.6814, 91.864744], [21.680947, 91.864764], [21.681067, 91.865553], [21.680803, 91.865669], [21.680947, 91.876975], [21.6783, 91.876756], [21.6783, 91.869308], [21.676672, 91.869311], [21.676694, 91.864881], [21.677292, 91.864083], [21.680072, 91.862853], [21.681283, 91.862894]];
+
+    // Draw Area A Polygon
+    var polyAreaA = L.polygon(areaA_coords, {
+        color: '#06b6d4',
+        weight: 2,
+        dashArray: '4, 6',
+        fillColor: '#0891b2',
+        fillOpacity: 0.18
+    }).addTo(siteMapInstance);
+    polyAreaA.bindTooltip("<strong style='color:#38bdf8;'>PROJECT AREA A</strong><br><span style='color:#94a3b8;'>North Zone Boundary</span>", {
+        sticky: true,
+        className: 'camera-map-label'
+    });
+
+    // Draw Area B Polygon
+    var polyAreaB = L.polygon(areaB_coords, {
+        color: '#f59e0b',
+        weight: 2,
+        dashArray: '4, 6',
+        fillColor: '#d97706',
+        fillOpacity: 0.18
+    }).addTo(siteMapInstance);
+    polyAreaB.bindTooltip("<strong style='color:#fbbf24;'>PROJECT AREA B</strong><br><span style='color:#94a3b8;'>South Zone Boundary</span>", {
+        sticky: true,
+        className: 'camera-map-label'
+    });
+
 
     fetch('/api/map_data')
         .then(function(r) { return r.json(); })
