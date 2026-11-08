@@ -79,6 +79,29 @@
         }
     </style>
 
+<style>
+        .area-zone-badge {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-radius: 8px !important;
+            padding: 4px 10px !important;
+            font-family: monospace !important;
+            font-weight: 800 !important;
+            font-size: 11px !important;
+            letter-spacing: 0.05em !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7) !important;
+            pointer-events: none !important;
+            text-align: center !important;
+        }
+        .area-a-badge {
+            border: 1.5px solid #06b6d4 !important;
+            color: #38bdf8 !important;
+        }
+        .area-b-badge {
+            border: 1.5px solid #f59e0b !important;
+            color: #fbbf24 !important;
+        }
+        .area-zone-badge::before { display: none !important; }
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-6 space-y-4">
 
@@ -1187,12 +1210,19 @@ function initSiteMap() {
         weight: 2,
         dashArray: '4, 6',
         fillColor: '#0891b2',
-        fillOpacity: 0.18
+        fillOpacity: 0.20
     }).addTo(siteMapInstance);
-    polyAreaA.bindTooltip("<strong style='color:#38bdf8;'>PROJECT AREA A</strong><br><span style='color:#94a3b8;'>North Zone Boundary</span>", {
-        sticky: true,
-        className: 'camera-map-label'
-    });
+
+    // Permanent Centroid Badge for Area A
+    var centerA = polyAreaA.getBounds().getCenter();
+    L.tooltip({
+        permanent: true,
+        direction: 'center',
+        className: 'area-zone-badge area-a-badge'
+    })
+    .setContent('PROJECT AREA A<br><span style="font-size:9px; color:#cbd5e1; font-weight:normal;">North Zone</span>')
+    .setLatLng(centerA)
+    .addTo(siteMapInstance);
 
     // Draw Area B Polygon
     var polyAreaB = L.polygon(areaB_coords, {
@@ -1200,12 +1230,19 @@ function initSiteMap() {
         weight: 2,
         dashArray: '4, 6',
         fillColor: '#d97706',
-        fillOpacity: 0.18
+        fillOpacity: 0.20
     }).addTo(siteMapInstance);
-    polyAreaB.bindTooltip("<strong style='color:#fbbf24;'>PROJECT AREA B</strong><br><span style='color:#94a3b8;'>South Zone Boundary</span>", {
-        sticky: true,
-        className: 'camera-map-label'
-    });
+
+    // Permanent Centroid Badge for Area B
+    var centerB = polyAreaB.getBounds().getCenter();
+    L.tooltip({
+        permanent: true,
+        direction: 'center',
+        className: 'area-zone-badge area-b-badge'
+    })
+    .setContent('PROJECT AREA B<br><span style="font-size:9px; color:#cbd5e1; font-weight:normal;">South Zone</span>')
+    .setLatLng(centerB)
+    .addTo(siteMapInstance);
 
 
     fetch('/api/map_data')
