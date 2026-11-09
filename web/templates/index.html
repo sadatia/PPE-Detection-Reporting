@@ -317,12 +317,69 @@
             </div>
 
             <!-- TAB 3: INCIDENT AUDIT LOGS -->
-            <div id="tab-LOGS" class="hidden flex-1 glass-panel rounded-xl p-4 overflow-y-auto custom-scrollbar">
-                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-mono">Audit Log Registry</h3>
-                    <button onclick="loadAuditLogs()" class="px-2.5 py-1 text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700">Refresh Logs</button>
+            <div id="tab-LOGS" class="hidden flex-1 glass-panel rounded-xl p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 font-mono text-xs">
+                
+                <!-- TOP HEADER & PRO FILTER CONTROLS -->
+                <div class="flex flex-col gap-3 pb-3 border-b border-slate-800 shrink-0">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100">Audit Log Registry</h3>
+                                <span id="log-filtered-count" class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-950 text-cyan-300 border border-cyan-800">Showing --</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">Review, triage, and filter recorded safety violations</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportAuditLogsCSV()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-900/60 rounded font-bold flex items-center gap-1 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Export CSV
+                            </button>
+                            <button onclick="loadAuditLogs()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition">
+                                Refresh Logs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Control Row -->
+                    <div class="flex flex-wrap items-center gap-2.5 pt-1">
+                        <!-- Live Search Input -->
+                        <div class="relative flex-1 min-w-[180px]">
+                            <input type="text" id="log-search-input" onkeyup="applyAuditFilters()" placeholder="Search ID, Cam, Zone, Type..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+                            <svg class="w-4 h-4 text-slate-500 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+
+                        <!-- Status Filter Pills -->
+                        <div class="flex bg-slate-900 border border-slate-700/80 rounded-lg p-0.5 text-[11px]">
+                            <button onclick="setAuditStatusFilter('ALL')" id="filter-btn-ALL" class="px-2.5 py-1 rounded font-bold bg-cyan-600 text-white transition">ALL</button>
+                            <button onclick="setAuditStatusFilter('PENDING')" id="filter-btn-PENDING" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-red-400 transition">PENDING</button>
+                            <button onclick="setAuditStatusFilter('ACKNOWLEDGED')" id="filter-btn-ACKNOWLEDGED" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-blue-400 transition">ACK</button>
+                            <button onclick="setAuditStatusFilter('RESOLVED')" id="filter-btn-RESOLVED" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-emerald-400 transition">RESOLVED</button>
+                            <button onclick="setAuditStatusFilter('FALSE_POSITIVE')" id="filter-btn-FALSE_POSITIVE" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-slate-200 transition">FALSE POS</button>
+                        </div>
+
+                        <!-- Camera Filter Dropdown -->
+                        <select id="log-cam-filter" onchange="applyAuditFilters()" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <option value="ALL">All Cameras (6)</option>
+                            <option value="CAM_01">CAM_01 — Main Entrance</option>
+                            <option value="CAM_02">CAM_02 — Hostel 2 & 3</option>
+                            <option value="CAM_03">CAM_03 — PTJV Gate</option>
+                            <option value="CAM_04">CAM_04 — Observation Deck</option>
+                            <option value="CAM_05">CAM_05 — CPA Castle</option>
+                            <option value="CAM_06">CAM_06 — Kamachan Gate</option>
+                        </select>
+
+                        <!-- Violation Type Filter Dropdown -->
+                        <select id="log-type-filter" onchange="applyAuditFilters()" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500">
+                            <option value="ALL">All Violations</option>
+                            <option value="HELMET">Missing Helmet</option>
+                            <option value="VEST">Missing Vest</option>
+                            <option value="BOOT">Missing Boot</option>
+                        </select>
+                    </div>
                 </div>
-                <div id="audit-table-container" class="text-xs font-mono">Loading full audit database...</div>
+
+                <!-- Table Container -->
+                <div id="audit-table-container" class="text-xs font-mono flex-1 overflow-y-auto custom-scrollbar">Loading full audit database...</div>
             </div>
 
             <!-- TAB 4: COMPLIANCE ANALYTICS (PRO) -->
@@ -716,7 +773,7 @@
             if (!container) return;
             container.innerHTML = '<div class="text-xs text-slate-400 py-4 font-mono animate-pulse">Loading audit database records...</div>';
 
-            fetch('/api/logs?limit=250')
+            fetch('/api/logs?limit=500')
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
                     if (res.status !== 'success' || !res.logs || res.logs.length === 0) {
@@ -728,56 +785,7 @@
                     var navBadge = document.getElementById('nav-log-count');
                     if (navBadge) navBadge.innerText = res.logs.length + '+';
 
-                    var html = `
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs font-mono">
-                                <thead>
-                                    <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider">
-                                        <th class="py-2.5 px-3">ID</th>
-                                        <th class="py-2.5 px-3">Camera Node</th>
-                                        <th class="py-2.5 px-3">Zone</th>
-                                        <th class="py-2.5 px-3">Violation Details</th>
-                                        <th class="py-2.5 px-3">Timestamp</th>
-                                        <th class="py-2.5 px-3">Status</th>
-                                        <th class="py-2.5 px-3 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-800/60">
-                    `;
-
-                    res.logs.forEach(function(item, idx) {
-                        var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
-                        var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
-
-                        html += `
-                            <tr class="hover:bg-slate-800/40 transition">
-                                <td class="py-2 px-3 text-slate-500">#${item.id}</td>
-                                <td class="py-2 px-3 font-bold text-slate-200">
-                                    ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name})</span>
-                                </td>
-                                <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
-                                <td class="py-2 px-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                                        ${item.violation_type}
-                                    </span>
-                                </td>
-                                <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
-                                <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
-                                <td class="py-2 px-3 text-right">
-                                    <button onclick="openSnapshotModal(auditLogsData[${idx}])" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
-                                        Review / Triage
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-
-                    html += `
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-                    container.innerHTML = html;
+                    applyAuditFilters();
                 })
                 .catch(function(err) {
                     container.innerHTML = '<div class="text-xs text-red-400 py-4 font-mono">Failed to query audit database: ' + err + '</div>';
@@ -1173,6 +1181,161 @@
                     if (bounds.length > 0) siteMapInstance.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
                 });
         }
-    </script>
+    var currentAuditStatusFilter = 'ALL';
+        var currentFilteredLogs = [];
+
+        function setAuditStatusFilter(st) {
+            currentAuditStatusFilter = st;
+            ['ALL', 'PENDING', 'ACKNOWLEDGED', 'RESOLVED', 'FALSE_POSITIVE'].forEach(function(s) {
+                var btn = document.getElementById('filter-btn-' + s);
+                if (btn) {
+                    if (s === st) {
+                        btn.className = 'px-2.5 py-1 rounded font-bold bg-cyan-600 text-white transition';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded font-bold text-slate-400 hover:text-white transition';
+                    }
+                }
+            });
+            applyAuditFilters();
+        }
+
+        function applyAuditFilters() {
+            var search = (document.getElementById('log-search-input') ? document.getElementById('log-search-input').value : '').toLowerCase().trim();
+            var camFilter = document.getElementById('log-cam-filter') ? document.getElementById('log-cam-filter').value : 'ALL';
+            var typeFilter = document.getElementById('log-type-filter') ? document.getElementById('log-type-filter').value : 'ALL';
+
+            currentFilteredLogs = auditLogsData.filter(function(item) {
+                // Status check
+                var st = item.status || 'PENDING';
+                if (currentAuditStatusFilter !== 'ALL') {
+                    if (currentAuditStatusFilter === 'FALSE_POSITIVE') {
+                        if (st !== 'FALSE_POSITIVE' && st !== 'FALSE POS') return false;
+                    } else if (currentAuditStatusFilter === 'RESOLVED') {
+                        if (st !== 'RESOLVED' && st !== 'RECTIFIED') return false;
+                    } else {
+                        if (st !== currentAuditStatusFilter) return false;
+                    }
+                }
+
+                // Camera check
+                if (camFilter !== 'ALL' && item.camera_id !== camFilter) return false;
+
+                // Violation type check
+                if (typeFilter !== 'ALL') {
+                    var vType = (item.violation_type || '').toUpperCase();
+                    if (vType.indexOf(typeFilter) === -1) return false;
+                }
+
+                // Text search across ID, camera, zone, violation, timestamp
+                if (search.length > 0) {
+                    var hay = ('#' + item.id + ' ' + item.camera_id + ' ' + (item.camera_name || '') + ' ' + (item.zone || '') + ' ' + (item.violation_type || '') + ' ' + (item.timestamp || '')).toLowerCase();
+                    if (hay.indexOf(search) === -1) return false;
+                }
+
+                return true;
+            });
+
+            renderAuditTable(currentFilteredLogs);
+        }
+
+        function renderAuditTable(logs) {
+            var container = document.getElementById('audit-table-container');
+            var countBadge = document.getElementById('log-filtered-count');
+            if (countBadge) countBadge.innerText = 'Showing ' + logs.length + ' / ' + auditLogsData.length;
+
+            if (!container) return;
+
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="text-xs text-slate-500 py-8 text-center font-mono">No incidents match the active filter criteria.</div>';
+                return;
+            }
+
+            var html = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider sticky top-0 backdrop-blur-md">
+                                <th class="py-2.5 px-3">ID</th>
+                                <th class="py-2.5 px-3">Camera Node</th>
+                                <th class="py-2.5 px-3">Zone</th>
+                                <th class="py-2.5 px-3">Violation Details</th>
+                                <th class="py-2.5 px-3">Timestamp</th>
+                                <th class="py-2.5 px-3">Status</th>
+                                <th class="py-2.5 px-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+            `;
+
+            logs.forEach(function(item) {
+                var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
+                var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
+
+                html += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-2 px-3 text-slate-500">#${item.id}</td>
+                        <td class="py-2 px-3 font-bold text-slate-200">
+                            ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name || ''})</span>
+                        </td>
+                        <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
+                        <td class="py-2 px-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                                ${item.violation_type}
+                            </span>
+                        </td>
+                        <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
+                        <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
+                        <td class="py-2 px-3 text-right">
+                            <button onclick="openSnapshotModalById(${item.id})" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
+                                Review / Triage
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function openSnapshotModalById(id) {
+            var item = auditLogsData.find(function(l) { return l.id === id; });
+            if (item) openSnapshotModal(item);
+        }
+
+        // CSV Export for filtered audit logs
+        function exportAuditLogsCSV() {
+            var logsToExport = (currentFilteredLogs && currentFilteredLogs.length > 0) ? currentFilteredLogs : auditLogsData;
+            if (!logsToExport || logsToExport.length === 0) return alert('No audit records to export.');
+
+            var rows = [["ID", "Camera ID", "Camera Name", "Zone", "Violation Type", "Timestamp", "Status", "Notes"]];
+            logsToExport.forEach(function(l) {
+                rows.push([
+                    l.id,
+                    l.camera_id,
+                    '"' + (l.camera_name || '') + '"',
+                    '"' + (l.zone || '') + '"',
+                    '"' + (l.violation_type || '') + '"',
+                    l.timestamp,
+                    l.status || 'PENDING',
+                    '"' + (l.supervisor_notes || '') + '"'
+                ]);
+            });
+
+            var csvContent = "data:text/csv;charset=utf-8," + rows.map(function(e) { return e.join(","); }).join("
+");
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "MPDP_Audit_Logs_" + Date.now() + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+</script>
 </body>
 </html>
