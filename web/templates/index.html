@@ -332,6 +332,119 @@
                 <div id="audit-table-container" class="text-xs font-mono">Loading full audit database...</div>
             </div>
 
+        
+            <!-- TAB 4: COMPLIANCE HEATMAP & ANALYTICS -->
+            <div id="tab-ANALYTICS" class="hidden flex-1 glass-panel rounded-xl p-5 overflow-y-auto custom-scrollbar font-mono text-xs space-y-5">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100">Site Compliance & Safety Analytics</h3>
+                        <p class="text-[11px] text-slate-400">Weekly statistical aggregation across all 6 monitored zones</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold">7-Day Aggregation</span>
+                        <button onclick="loadComplianceAnalytics()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700">Refresh Data</button>
+                    </div>
+                </div>
+
+                <!-- Metrics Highlights -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Total 7-Day Violations</div>
+                        <div id="ana-total-7d" class="text-2xl font-black text-slate-100 my-1">--</div>
+                        <div class="text-[10px] text-slate-500">Recorded across audit database</div>
+                    </div>
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Day vs Night Ratio</div>
+                        <div id="ana-shift-ratio" class="text-sm font-bold text-cyan-400 my-1">Analyzing...</div>
+                        <div class="text-[10px] text-slate-500">Day (08:00-17:00) vs Night shift</div>
+                    </div>
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Highest Risk Zone</div>
+                        <div id="ana-top-zone" class="text-sm font-bold text-amber-400 my-1">Analyzing...</div>
+                        <div class="text-[10px] text-slate-500">Requires targeted supervisor patrol</div>
+                    </div>
+                </div>
+
+                <!-- Two-Column Breakdown: Type vs Zone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Violation Types -->
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                        <h4 class="font-bold text-slate-200 mb-3 text-xs uppercase tracking-wide">Infractions by PPE Category</h4>
+                        <div id="ana-type-container" class="space-y-2.5">Loading category breakdown...</div>
+                    </div>
+
+                    <!-- Zone Distribution -->
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                        <h4 class="font-bold text-slate-200 mb-3 text-xs uppercase tracking-wide">Risk Ranking by Project Zone</h4>
+                        <div id="ana-zone-container" class="space-y-2.5">Loading zone ranking...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: SYSTEM PERFORMANCE MONITORING -->
+            <div id="tab-PERFORMANCE" class="hidden flex-1 glass-panel rounded-xl p-5 overflow-y-auto custom-scrollbar font-mono text-xs space-y-5">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100">Edge Hardware Telemetry & Daemons</h3>
+                        <p class="text-[11px] text-slate-400">GTX 1080 Ti Pascal inference, NVDEC decoders, network IP speakers, and storage</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded bg-emerald-950 border border-emerald-800 text-emerald-400 font-bold flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> DAEMON ONLINE
+                    </span>
+                </div>
+
+                <!-- Hardware Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- GPU Telemetry Card -->
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
+                            <span>Inference Accelerator</span>
+                            <span class="text-emerald-400">CUDA 12.2</span>
+                        </div>
+                        <div class="text-base font-bold text-slate-100">GTX 1080 Ti (11GB)</div>
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Compute Core Load:</span> <span id="perf-gpu-load" class="text-emerald-400 font-bold">--%</span></div>
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Core Temperature:</span> <span id="perf-gpu-temp" class="text-slate-200 font-bold">--°C</span></div>
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">VRAM Allocation:</span> <span id="perf-gpu-vram" class="text-cyan-400 font-bold">-- MB</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Host System Card -->
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
+                            <span>Host Server</span>
+                            <span class="text-slate-300">Ubuntu 24.04</span>
+                        </div>
+                        <div class="text-base font-bold text-slate-100">CPU & RAM Matrix</div>
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">CPU Utilization:</span> <span id="perf-cpu-load" class="text-slate-200 font-bold">--%</span></div>
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Host RAM Usage:</span> <span id="perf-ram-used" class="text-slate-200 font-bold">-- GB</span></div>
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Storage Remaining:</span> <span id="perf-disk-free" class="text-emerald-400 font-bold">-- GB</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Inference Engine Card -->
+                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
+                            <span>Vision Core</span>
+                            <span class="text-cyan-400">FP16 Half-Precision</span>
+                        </div>
+                        <div class="text-base font-bold text-slate-100">YOLOv8s Pipeline</div>
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Inference Batch Latency:</span> <span class="text-cyan-400 font-bold">~2.1 ms / frame</span></div>
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Concurrent Decoders:</span> <span class="text-slate-200 font-bold">6x Hardware Substreams</span></div>
+                            <div class="flex justify-between text-[11px]"><span class="text-slate-400">Debounce Threshold:</span> <span class="text-slate-200 font-bold">3.5 sec persistence</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Peripherals Table -->
+                <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-slate-200 mb-3 text-xs uppercase tracking-wide">Network Peripherals & Actuation Latency</h4>
+                    <div id="perf-peripherals-table" class="space-y-2">Loading peripheral latency telemetry...</div>
+                </div>
+            </div>
+
         </main>
 
         <!-- ============================================== -->
@@ -416,7 +529,11 @@
                 activeBtn.classList.remove('text-slate-300');
             }
 
-            if (tabId === 'LOGS') {
+            if (tabId === 'ANALYTICS') {
+                loadComplianceAnalytics();
+            } else if (tabId === 'PERFORMANCE') {
+                loadSystemPerformance();
+            } else if (tabId === 'LOGS') {
                 loadAuditLogs();
             } else if (tabId === 'MAP') {
                 setTimeout(function() {
@@ -569,29 +686,78 @@
                 });
         }
     
-        function openSnapshotModal(id, meta) {
+        var currentActiveIncidentId = null;
+
+        function getStatusBadge(st) {
+            st = st || 'PENDING';
+            if (st === 'RESOLVED' || st === 'RECTIFIED') {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">RESOLVED</span>';
+            } else if (st === 'ACKNOWLEDGED') {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-blue-950 text-blue-400 border border-blue-800">ACKNOWLEDGED</span>';
+            } else if (st === 'FALSE_POSITIVE') {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700 line-through">FALSE POS</span>';
+            } else {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-red-950 text-red-400 border border-red-800">PENDING</span>';
+            }
+        }
+
+        function openSnapshotModal(item) {
+            currentActiveIncidentId = item.id;
             var m = document.getElementById('snapshot-modal');
-            var img = document.getElementById('modal-img');
-            var title = document.getElementById('modal-title');
-            var metaSpan = document.getElementById('modal-meta');
-            var dl = document.getElementById('modal-download');
             
-            img.src = '/api/snapshot/' + id;
-            title.innerText = 'Incident #' + id + ' Evidence Snapshot';
-            metaSpan.innerText = meta;
-            dl.href = '/api/snapshot/' + id;
+            document.getElementById('modal-id-badge').innerText = '#' + item.id;
+            document.getElementById('modal-title').innerText = item.camera_id + ' — ' + item.violation_type;
+            document.getElementById('modal-cam').innerText = item.camera_id + ' (' + item.camera_name + ')';
+            document.getElementById('modal-zone').innerText = item.zone || 'Site Operational Area';
+            document.getElementById('modal-violation').innerText = item.violation_type;
+            document.getElementById('modal-time').innerText = item.timestamp;
+            document.getElementById('modal-notes').value = item.supervisor_notes || '';
+            document.getElementById('modal-status-pill').innerHTML = getStatusBadge(item.status);
+            document.getElementById('modal-file-path').innerText = item.snapshot_path || 'No local file';
+
+            var img = document.getElementById('modal-img');
+            img.src = '/api/snapshot/' + item.id;
+            document.getElementById('modal-download').href = '/api/snapshot/' + item.id;
+
             m.classList.remove('hidden');
         }
 
         function closeSnapshotModal() {
             var m = document.getElementById('snapshot-modal');
             if (m) m.classList.add('hidden');
+            currentActiveIncidentId = null;
         }
 
-        // Close on escape
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeSnapshotModal();
-        });
+        function submitAuditAction(newStatus) {
+            if (!currentActiveIncidentId) return;
+            var notes = document.getElementById('modal-notes').value;
+
+            fetch('/api/audit/update_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: currentActiveIncidentId,
+                    status: newStatus,
+                    notes: notes
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.status === 'success') {
+                    closeSnapshotModal();
+                    loadAuditLogs();
+                    if (typeof fetchSidebar === 'function') fetchSidebar();
+                } else {
+                    alert('Failed to update status: ' + (res.message || 'Server error'));
+                }
+            })
+            .catch(function(e) {
+                alert('Network error updating status: ' + e);
+            });
+        }
+
+        // Cache incident objects in memory for fast lookup
+        var auditLogsData = [];
 
         function loadAuditLogs() {
             var container = document.getElementById('audit-table-container');
@@ -606,6 +772,7 @@
                         return;
                     }
 
+                    auditLogsData = res.logs;
                     var navBadge = document.getElementById('nav-log-count');
                     if (navBadge) navBadge.innerText = res.logs.length + '+';
 
@@ -620,21 +787,16 @@
                                         <th class="py-2.5 px-3">Violation Details</th>
                                         <th class="py-2.5 px-3">Timestamp</th>
                                         <th class="py-2.5 px-3">Status</th>
-                                        <th class="py-2.5 px-3 text-right">Evidence</th>
+                                        <th class="py-2.5 px-3 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-800/60">
                     `;
 
-                    res.logs.forEach(function(item) {
+                    res.logs.forEach(function(item, idx) {
                         var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
                         var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
-                        var metaStr = item.camera_id + ' • ' + (item.zone || 'Site') + ' • ' + item.timestamp;
-
-                        var snapshotBtn = item.snapshot_path 
-                            ? `<button onclick="openSnapshotModal(${item.id}, '${metaStr}')" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 transition">View Snapshot</button>`
-                            : `<span class="text-slate-600">No Image</span>`;
-
+                        
                         html += `
                             <tr class="hover:bg-slate-800/40 transition">
                                 <td class="py-2 px-3 text-slate-500">#${item.id}</td>
@@ -648,10 +810,12 @@
                                     </span>
                                 </td>
                                 <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
-                                <td class="py-2 px-3">
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800">${item.status}</span>
+                                <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
+                                <td class="py-2 px-3 text-right">
+                                    <button onclick="openSnapshotModal(auditLogsData[${idx}])" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
+                                        Review / Triage
+                                    </button>
                                 </td>
-                                <td class="py-2 px-3 text-right">${snapshotBtn}</td>
                             </tr>
                         `;
                     });
@@ -670,19 +834,72 @@
 
 </script>
 
-    <!-- SNAPSHOT PREVIEW MODAL -->
-    <div id="snapshot-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="glass-panel-card max-w-3xl w-full rounded-2xl p-4 border border-slate-700 shadow-2xl relative font-mono text-xs">
-            <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-700">
-                <div id="modal-title" class="font-bold text-slate-100 text-sm">Incident Evidence Snapshot</div>
-                <button onclick="closeSnapshotModal()" class="text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800">ESC / ✕</button>
+    <!-- INCIDENT AUDIT & TRIAGE MODAL -->
+    <div id="snapshot-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
+        <div class="glass-panel-card max-w-4xl w-full rounded-2xl border border-slate-700 shadow-2xl relative font-mono text-xs flex flex-col max-h-[92vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/80 bg-slate-900/60 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span id="modal-id-badge" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold text-xs">#0000</span>
+                    <h3 id="modal-title" class="font-bold text-slate-100 text-sm">Incident Evidence Review</h3>
+                </div>
+                <button onclick="closeSnapshotModal()" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">✕ Close (ESC)</button>
             </div>
-            <div class="bg-black rounded-lg overflow-hidden flex items-center justify-center max-h-[70vh]">
-                <img id="modal-img" src="" alt="Evidence" class="max-h-[68vh] w-auto object-contain" />
-            </div>
-            <div class="flex items-center justify-between mt-3 text-slate-400 text-[11px]">
-                <span id="modal-meta">--</span>
-                <a id="modal-download" href="#" target="_blank" class="text-cyan-400 hover:underline">Open Original File ↗</a>
+
+            <!-- Modal Content (2-Column Layout: Evidence Left, Details & Triage Right) -->
+            <div class="p-5 flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-12 gap-5">
+                <!-- Evidence Image -->
+                <div class="md:col-span-7 flex flex-col bg-black rounded-xl overflow-hidden border border-slate-800">
+                    <div class="flex-1 flex items-center justify-center p-1 bg-black min-h-[300px]">
+                        <img id="modal-img" src="" alt="Evidence" class="max-h-[50vh] w-full object-contain rounded" />
+                    </div>
+                    <div class="p-2.5 bg-slate-900/80 border-t border-slate-800 flex justify-between items-center text-[11px]">
+                        <span id="modal-file-path" class="text-slate-500 truncate max-w-xs">/mnt/synology_cctv/...</span>
+                        <a id="modal-download" href="#" target="_blank" class="text-cyan-400 hover:underline">View Full Image ↗</a>
+                    </div>
+                </div>
+
+                <!-- Triage Actions & Metadata -->
+                <div class="md:col-span-5 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="glass-panel p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
+                            <div class="flex justify-between"><span class="text-slate-400">Camera:</span> <span id="modal-cam" class="font-bold text-slate-200">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Zone:</span> <span id="modal-zone" class="text-slate-300">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Violation:</span> <span id="modal-violation" class="text-amber-400 font-bold">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Timestamp:</span> <span id="modal-time" class="text-slate-300">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Current Status:</span> <span id="modal-status-pill" class="px-1.5 py-0.5 rounded text-[10px] font-bold">--</span></div>
+                        </div>
+
+                        <!-- Supervisor Notes Field -->
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Supervisor Notes / Remarks</label>
+                            <textarea id="modal-notes" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs font-mono focus:border-cyan-500 focus:outline-none" placeholder="Enter corrective action or reason for false positive..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Triage Action Buttons -->
+                    <div class="space-y-2 pt-2 border-t border-slate-800">
+                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Action & Rectification</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="submitAuditAction('RESOLVED')" class="px-3 py-2 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Rectified / Resolved
+                            </button>
+                            <button onclick="submitAuditAction('ACKNOWLEDGED')" class="px-3 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Acknowledge
+                            </button>
+                            <button onclick="submitAuditAction('FALSE_POSITIVE')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-900/40 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                False Positive
+                            </button>
+                            <button onclick="submitAuditAction('PENDING')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-900/40 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Reset Pending
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
