@@ -59,7 +59,6 @@
             </div>
         </div>
 
-        <!-- Telemetry Indicators -->
         <div class="flex items-center gap-6 text-xs font-mono">
             <div class="flex items-center gap-2">
                 <span class="text-slate-400">GPU:</span>
@@ -82,9 +81,8 @@
     <!-- MAIN 3-COLUMN WORKSPACE -->
     <div class="flex-1 flex overflow-hidden">
         
-        <!-- LEFT SIDEBAR: NAVIGATION & STATUS OVERVIEWS -->
+        <!-- LEFT SIDEBAR: NAVIGATION -->
         <aside class="w-64 bg-[#0d1424] border-r border-slate-800 flex flex-col p-3 gap-3 overflow-y-auto custom-scrollbar shrink-0">
-            <!-- Navigation Buttons -->
             <div class="space-y-1.5">
                 <button onclick="switchTab('GRID')" id="btn-tab-GRID" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold bg-cyan-600 text-white shadow-lg transition">
                     <span class="flex items-center gap-2">
@@ -128,7 +126,7 @@
 
             <hr class="border-slate-800 my-1">
 
-            <!-- System Metrics Cards (Left Rail) -->
+            <!-- System Metrics Cards -->
             <div class="space-y-2.5 text-xs font-mono">
                 <div class="glass-panel p-3 rounded-lg border border-slate-800">
                     <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1">
@@ -175,9 +173,8 @@
         <!-- CENTER WORKSPACE -->
         <main class="flex-1 bg-[#090e1a] p-4 flex flex-col gap-3 overflow-hidden">
             
-            <!-- TAB 1: 2x3 CAMERA MATRIX -->
+            <!-- TAB 1: LIVE CAMERA MATRIX -->
             <div id="tab-GRID" class="flex-1 flex flex-col gap-3 overflow-hidden">
-                <!-- Filter Bar -->
                 <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 shrink-0">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-bold text-white tracking-wide">Live View</h2>
@@ -197,7 +194,6 @@
                     </div>
                 </div>
 
-                <!-- 2x3 Matrix Grid -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 h-full">
                         <!-- CAM 01 -->
@@ -303,23 +299,21 @@
                                 <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
                                 <button onclick="playHorn('10.220.148.16')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
-                                TOA Voice
-                            </button>
+                                    TOA Voice
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 2: GEOSPATIAL MAP & HEATMAP -->
+            <!-- TAB 2: GEOSPATIAL MAP -->
             <div id="tab-MAP" class="hidden flex-1 rounded-xl overflow-hidden relative">
                 <div id="site-geospatial-map" style="height: 100%; width: 100%; border-radius: 0.75rem;"></div>
             </div>
 
             <!-- TAB 3: INCIDENT AUDIT LOGS -->
             <div id="tab-LOGS" class="hidden flex-1 glass-panel rounded-xl p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 font-mono text-xs">
-                
-                <!-- TOP HEADER & PRO FILTER CONTROLS -->
                 <div class="flex flex-col gap-3 pb-3 border-b border-slate-800 shrink-0">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
@@ -340,15 +334,13 @@
                         </div>
                     </div>
 
-                    <!-- Filter Control Row -->
+                    <!-- Filter Control Toolbar -->
                     <div class="flex flex-wrap items-center gap-2.5 pt-1">
-                        <!-- Live Search Input -->
                         <div class="relative flex-1 min-w-[180px]">
                             <input type="text" id="log-search-input" onkeyup="applyAuditFilters()" placeholder="Search ID, Cam, Zone, Type..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
                             <svg class="w-4 h-4 text-slate-500 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
 
-                        <!-- Status Filter Pills -->
                         <div class="flex bg-slate-900 border border-slate-700/80 rounded-lg p-0.5 text-[11px]">
                             <button onclick="setAuditStatusFilter('ALL')" id="filter-btn-ALL" class="px-2.5 py-1 rounded font-bold bg-cyan-600 text-white transition">ALL</button>
                             <button onclick="setAuditStatusFilter('PENDING')" id="filter-btn-PENDING" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-red-400 transition">PENDING</button>
@@ -357,7 +349,6 @@
                             <button onclick="setAuditStatusFilter('FALSE_POSITIVE')" id="filter-btn-FALSE_POSITIVE" class="px-2.5 py-1 rounded font-bold text-slate-400 hover:text-slate-200 transition">FALSE POS</button>
                         </div>
 
-                        <!-- Camera Filter Dropdown -->
                         <select id="log-cam-filter" onchange="applyAuditFilters()" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500">
                             <option value="ALL">All Cameras (6)</option>
                             <option value="CAM_01">CAM_01 — Main Entrance</option>
@@ -368,7 +359,6 @@
                             <option value="CAM_06">CAM_06 — Kamachan Gate</option>
                         </select>
 
-                        <!-- Violation Type Filter Dropdown -->
                         <select id="log-type-filter" onchange="applyAuditFilters()" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-cyan-500">
                             <option value="ALL">All Violations</option>
                             <option value="HELMET">Missing Helmet</option>
@@ -378,13 +368,11 @@
                     </div>
                 </div>
 
-                <!-- Table Container -->
                 <div id="audit-table-container" class="text-xs font-mono flex-1 overflow-y-auto custom-scrollbar">Loading full audit database...</div>
             </div>
 
             <!-- TAB 4: COMPLIANCE ANALYTICS (PRO) -->
             <div id="tab-ANALYTICS" class="hidden flex-1 glass-panel rounded-xl p-4 overflow-y-auto custom-scrollbar font-mono text-xs space-y-4">
-                <!-- Toolbar -->
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                     <div>
                         <div class="flex items-center gap-2">
@@ -418,7 +406,6 @@
                     </div>
                 </div>
 
-                <!-- 4 KPI Cards -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div class="glass-panel-card p-3 rounded-xl border border-slate-800">
                         <div class="text-slate-400 text-[10px] uppercase font-bold">Total Violations</div>
@@ -442,7 +429,6 @@
                     </div>
                 </div>
 
-                <!-- Charts Row 1: Line Trend & PPE Donut -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
                     <div class="lg:col-span-8 glass-panel-card p-4 rounded-xl border border-slate-800 flex flex-col">
                         <div class="flex items-center justify-between mb-2">
@@ -465,7 +451,6 @@
                     </div>
                 </div>
 
-                <!-- Charts Row 2: Zone Density Bar -->
                 <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Project Zone Risk Density Ranking</span>
@@ -489,7 +474,6 @@
                     </span>
                 </div>
 
-                <!-- Hardware Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
                         <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
@@ -541,7 +525,6 @@
 
         <!-- RIGHT RAIL -->
         <aside class="w-72 bg-[#0d1424] border-l border-slate-800 flex flex-col p-3.5 gap-4 overflow-y-auto custom-scrollbar shrink-0">
-            <!-- Top Metric Tiles -->
             <div class="space-y-2.5">
                 <div class="glass-panel p-3 rounded-lg border border-slate-800 flex items-center justify-between">
                     <div>
@@ -574,7 +557,7 @@
                 </div>
             </div>
 
-            <!-- Recent Alerts Action Feed -->
+            <!-- Recent Alerts -->
             <div class="flex-1 flex flex-col min-h-0">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
                     <span class="text-xs font-bold text-slate-300 font-mono uppercase">Recent Alerts</span>
@@ -589,7 +572,7 @@
 
     </div>
 
-    <!-- INCIDENT AUDIT & TRIAGE MODAL -->
+    <!-- INCIDENT TRIAGE MODAL -->
     <div id="snapshot-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
         <div class="glass-panel-card max-w-4xl w-full rounded-2xl border border-slate-700 shadow-2xl relative font-mono text-xs flex flex-col max-h-[92vh] overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/80 bg-slate-900/60 shrink-0">
@@ -653,21 +636,22 @@
         </div>
     </div>
 
-    <!-- CORE JAVASCRIPT CONTROLLER -->
+    <!-- CORE SCRIPT -->
     <script>
         var currentTab = 'GRID';
         var siteMapInstance = null;
         var auditLogsData = [];
+        var currentFilteredLogs = [];
         var currentActiveIncidentId = null;
+        var currentAuditStatusFilter = 'ALL';
 
-        // Chart.js Instances
         var currentAnalyticsRange = '7d';
         var chartTimelineInstance = null;
         var chartPpeInstance = null;
         var chartZoneInstance = null;
         var currentRawAnalyticsData = null;
 
-        // Navigation Controller
+        // Switch Tab Navigation
         function switchTab(tabId) {
             currentTab = tabId;
             var tabs = ['GRID', 'MAP', 'LOGS', 'ANALYTICS', 'PERFORMANCE'];
@@ -690,7 +674,6 @@
                 activeBtn.classList.remove('text-slate-300');
             }
 
-            // Tab-specific fetch triggers
             if (tabId === 'ANALYTICS') {
                 loadComplianceAnalytics();
             } else if (tabId === 'PERFORMANCE') {
@@ -705,7 +688,7 @@
             }
         }
 
-        // Live Frame Auto-Refresh Loop
+        // Live Frame Loop
         setInterval(function() {
             if (currentTab === 'GRID') {
                 ['CAM_01', 'CAM_02', 'CAM_03', 'CAM_04', 'CAM_05', 'CAM_06'].forEach(function(cid) {
@@ -715,7 +698,7 @@
             }
         }, 1200);
 
-        // Fetch Live Sidebar KPIs & Event List
+        // Sidebar Polling
         function fetchSidebar() {
             fetch('/api/sidebar_summary')
                 .then(function(r) { return r.json(); })
@@ -753,7 +736,6 @@
         setInterval(fetchSidebar, 4000);
         fetchSidebar();
 
-        // Status Badge Helper
         function getStatusBadge(st) {
             st = st || 'PENDING';
             if (st === 'RESOLVED' || st === 'RECTIFIED') {
@@ -767,7 +749,7 @@
             }
         }
 
-        // Audit Logs Loader
+        // Audit Logs & Filters
         function loadAuditLogs() {
             var container = document.getElementById('audit-table-container');
             if (!container) return;
@@ -792,7 +774,153 @@
                 });
         }
 
-        // Triage Modal Controls
+        function setAuditStatusFilter(st) {
+            currentAuditStatusFilter = st;
+            ['ALL', 'PENDING', 'ACKNOWLEDGED', 'RESOLVED', 'FALSE_POSITIVE'].forEach(function(s) {
+                var btn = document.getElementById('filter-btn-' + s);
+                if (btn) {
+                    if (s === st) {
+                        btn.className = 'px-2.5 py-1 rounded font-bold bg-cyan-600 text-white transition';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded font-bold text-slate-400 hover:text-white transition';
+                    }
+                }
+            });
+            applyAuditFilters();
+        }
+
+        function applyAuditFilters() {
+            var search = (document.getElementById('log-search-input') ? document.getElementById('log-search-input').value : '').toLowerCase().trim();
+            var camFilter = document.getElementById('log-cam-filter') ? document.getElementById('log-cam-filter').value : 'ALL';
+            var typeFilter = document.getElementById('log-type-filter') ? document.getElementById('log-type-filter').value : 'ALL';
+
+            currentFilteredLogs = (auditLogsData || []).filter(function(item) {
+                var st = item.status || 'PENDING';
+                if (currentAuditStatusFilter !== 'ALL') {
+                    if (currentAuditStatusFilter === 'FALSE_POSITIVE') {
+                        if (st !== 'FALSE_POSITIVE' && st !== 'FALSE POS') return false;
+                    } else if (currentAuditStatusFilter === 'RESOLVED') {
+                        if (st !== 'RESOLVED' && st !== 'RECTIFIED') return false;
+                    } else {
+                        if (st !== currentAuditStatusFilter) return false;
+                    }
+                }
+
+                if (camFilter !== 'ALL' && item.camera_id !== camFilter) return false;
+
+                if (typeFilter !== 'ALL') {
+                    var vType = (item.violation_type || '').toUpperCase();
+                    if (vType.indexOf(typeFilter) === -1) return false;
+                }
+
+                if (search.length > 0) {
+                    var hay = ('#' + item.id + ' ' + item.camera_id + ' ' + (item.camera_name || '') + ' ' + (item.zone || '') + ' ' + (item.violation_type || '') + ' ' + (item.timestamp || '')).toLowerCase();
+                    if (hay.indexOf(search) === -1) return false;
+                }
+
+                return true;
+            });
+
+            renderAuditTable(currentFilteredLogs);
+        }
+
+        function renderAuditTable(logs) {
+            var container = document.getElementById('audit-table-container');
+            var countBadge = document.getElementById('log-filtered-count');
+            if (countBadge) countBadge.innerText = 'Showing ' + logs.length + ' / ' + auditLogsData.length;
+            if (!container) return;
+
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="text-xs text-slate-500 py-8 text-center font-mono">No incidents match the active filter criteria.</div>';
+                return;
+            }
+
+            var html = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider sticky top-0 backdrop-blur-md">
+                                <th class="py-2.5 px-3">ID</th>
+                                <th class="py-2.5 px-3">Camera Node</th>
+                                <th class="py-2.5 px-3">Zone</th>
+                                <th class="py-2.5 px-3">Violation Details</th>
+                                <th class="py-2.5 px-3">Timestamp</th>
+                                <th class="py-2.5 px-3">Status</th>
+                                <th class="py-2.5 px-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+            `;
+
+            logs.forEach(function(item) {
+                var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
+                var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
+
+                html += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-2 px-3 text-slate-500">#${item.id}</td>
+                        <td class="py-2 px-3 font-bold text-slate-200">
+                            ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name || ''})</span>
+                        </td>
+                        <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
+                        <td class="py-2 px-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                                ${item.violation_type}
+                            </span>
+                        </td>
+                        <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
+                        <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
+                        <td class="py-2 px-3 text-right">
+                            <button onclick="openSnapshotModalById(${item.id})" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
+                                Review / Triage
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function openSnapshotModalById(id) {
+            var item = auditLogsData.find(function(l) { return l.id === id; });
+            if (item) openSnapshotModal(item);
+        }
+
+        function exportAuditLogsCSV() {
+            var logsToExport = (currentFilteredLogs && currentFilteredLogs.length > 0) ? currentFilteredLogs : auditLogsData;
+            if (!logsToExport || logsToExport.length === 0) return alert('No audit records to export.');
+
+            var rows = [["ID", "Camera ID", "Camera Name", "Zone", "Violation Type", "Timestamp", "Status", "Notes"]];
+            logsToExport.forEach(function(l) {
+                rows.push([
+                    l.id,
+                    l.camera_id,
+                    '"' + (l.camera_name || '') + '"',
+                    '"' + (l.zone || '') + '"',
+                    '"' + (l.violation_type || '') + '"',
+                    l.timestamp,
+                    l.status || 'PENDING',
+                    '"' + (l.supervisor_notes || '') + '"'
+                ]);
+            });
+
+            var csvContent = "data:text/csv;charset=utf-8," + rows.map(function(e) { return e.join(","); }).join("\n");
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "MPDP_Audit_Logs_" + Date.now() + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Triage Modal
         function openSnapshotModal(item) {
             currentActiveIncidentId = item.id;
             var m = document.getElementById('snapshot-modal');
@@ -850,7 +978,7 @@
             .catch(function(e) { alert('Error: ' + e); });
         }
 
-        // Compliance Analytics Controller & Chart.js Engine
+        // Analytics
         function setAnalyticsRange(rng) {
             currentAnalyticsRange = rng;
             ['24h', '7d', '30d'].forEach(function(r) {
@@ -1032,7 +1160,7 @@
             document.body.removeChild(link);
         }
 
-        // System Performance Telemetry Loader
+        // Performance
         function loadSystemPerformance() {
             fetch('/api/system_telemetry')
                 .then(function(r) { return r.json(); })
@@ -1087,7 +1215,7 @@
                 .catch(function(e) { console.error(e); });
         }
 
-        // Barix PA Horn Trigger
+        // Speaker Actuation
         function playHorn(speakerIp) {
             fetch('/api/trigger_horn', {
                 method: 'POST',
@@ -1106,7 +1234,6 @@
             }
         }
 
-        // Camera Filter
         function filterCameraSelection(val) {
             var cards = ['CAM_01', 'CAM_02', 'CAM_03', 'CAM_04', 'CAM_05', 'CAM_06'];
             cards.forEach(function(cid) {
@@ -1121,7 +1248,7 @@
             });
         }
 
-        // Leaflet Site Map
+        // Geospatial Map with Area A, B & 2x Zoom Out
         function initSiteMap() {
             if (siteMapInstance) return;
 
@@ -1144,7 +1271,6 @@
                 .then(function(res) {
                     if (res.status !== 'success') return;
                     var heatPoints = [];
-                    // Pre-seed bounds with Area A and Area B polygon vertices
                     var bounds = areaA_coords.concat(areaB_coords);
 
                     res.cameras.forEach(function(cam) {
@@ -1178,164 +1304,11 @@
                     if (typeof L.heatLayer === 'function') {
                         L.heatLayer(heatPoints, { radius: 35, blur: 20, maxZoom: 16 }).addTo(siteMapInstance);
                     }
-                    if (bounds.length > 0) siteMapInstance.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
+                    if (bounds.length > 0) {
+                        siteMapInstance.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
+                    }
                 });
         }
-    var currentAuditStatusFilter = 'ALL';
-        var currentFilteredLogs = [];
-
-        function setAuditStatusFilter(st) {
-            currentAuditStatusFilter = st;
-            ['ALL', 'PENDING', 'ACKNOWLEDGED', 'RESOLVED', 'FALSE_POSITIVE'].forEach(function(s) {
-                var btn = document.getElementById('filter-btn-' + s);
-                if (btn) {
-                    if (s === st) {
-                        btn.className = 'px-2.5 py-1 rounded font-bold bg-cyan-600 text-white transition';
-                    } else {
-                        btn.className = 'px-2.5 py-1 rounded font-bold text-slate-400 hover:text-white transition';
-                    }
-                }
-            });
-            applyAuditFilters();
-        }
-
-        function applyAuditFilters() {
-            var search = (document.getElementById('log-search-input') ? document.getElementById('log-search-input').value : '').toLowerCase().trim();
-            var camFilter = document.getElementById('log-cam-filter') ? document.getElementById('log-cam-filter').value : 'ALL';
-            var typeFilter = document.getElementById('log-type-filter') ? document.getElementById('log-type-filter').value : 'ALL';
-
-            currentFilteredLogs = auditLogsData.filter(function(item) {
-                // Status check
-                var st = item.status || 'PENDING';
-                if (currentAuditStatusFilter !== 'ALL') {
-                    if (currentAuditStatusFilter === 'FALSE_POSITIVE') {
-                        if (st !== 'FALSE_POSITIVE' && st !== 'FALSE POS') return false;
-                    } else if (currentAuditStatusFilter === 'RESOLVED') {
-                        if (st !== 'RESOLVED' && st !== 'RECTIFIED') return false;
-                    } else {
-                        if (st !== currentAuditStatusFilter) return false;
-                    }
-                }
-
-                // Camera check
-                if (camFilter !== 'ALL' && item.camera_id !== camFilter) return false;
-
-                // Violation type check
-                if (typeFilter !== 'ALL') {
-                    var vType = (item.violation_type || '').toUpperCase();
-                    if (vType.indexOf(typeFilter) === -1) return false;
-                }
-
-                // Text search across ID, camera, zone, violation, timestamp
-                if (search.length > 0) {
-                    var hay = ('#' + item.id + ' ' + item.camera_id + ' ' + (item.camera_name || '') + ' ' + (item.zone || '') + ' ' + (item.violation_type || '') + ' ' + (item.timestamp || '')).toLowerCase();
-                    if (hay.indexOf(search) === -1) return false;
-                }
-
-                return true;
-            });
-
-            renderAuditTable(currentFilteredLogs);
-        }
-
-        function renderAuditTable(logs) {
-            var container = document.getElementById('audit-table-container');
-            var countBadge = document.getElementById('log-filtered-count');
-            if (countBadge) countBadge.innerText = 'Showing ' + logs.length + ' / ' + auditLogsData.length;
-
-            if (!container) return;
-
-            if (logs.length === 0) {
-                container.innerHTML = '<div class="text-xs text-slate-500 py-8 text-center font-mono">No incidents match the active filter criteria.</div>';
-                return;
-            }
-
-            var html = `
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs font-mono">
-                        <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider sticky top-0 backdrop-blur-md">
-                                <th class="py-2.5 px-3">ID</th>
-                                <th class="py-2.5 px-3">Camera Node</th>
-                                <th class="py-2.5 px-3">Zone</th>
-                                <th class="py-2.5 px-3">Violation Details</th>
-                                <th class="py-2.5 px-3">Timestamp</th>
-                                <th class="py-2.5 px-3">Status</th>
-                                <th class="py-2.5 px-3 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800/60">
-            `;
-
-            logs.forEach(function(item) {
-                var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
-                var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
-
-                html += `
-                    <tr class="hover:bg-slate-800/40 transition">
-                        <td class="py-2 px-3 text-slate-500">#${item.id}</td>
-                        <td class="py-2 px-3 font-bold text-slate-200">
-                            ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name || ''})</span>
-                        </td>
-                        <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
-                        <td class="py-2 px-3">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                                ${item.violation_type}
-                            </span>
-                        </td>
-                        <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
-                        <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
-                        <td class="py-2 px-3 text-right">
-                            <button onclick="openSnapshotModalById(${item.id})" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
-                                Review / Triage
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            container.innerHTML = html;
-        }
-
-        function openSnapshotModalById(id) {
-            var item = auditLogsData.find(function(l) { return l.id === id; });
-            if (item) openSnapshotModal(item);
-        }
-
-        // CSV Export for filtered audit logs
-        function exportAuditLogsCSV() {
-            var logsToExport = (currentFilteredLogs && currentFilteredLogs.length > 0) ? currentFilteredLogs : auditLogsData;
-            if (!logsToExport || logsToExport.length === 0) return alert('No audit records to export.');
-
-            var rows = [["ID", "Camera ID", "Camera Name", "Zone", "Violation Type", "Timestamp", "Status", "Notes"]];
-            logsToExport.forEach(function(l) {
-                rows.push([
-                    l.id,
-                    l.camera_id,
-                    '"' + (l.camera_name || '') + '"',
-                    '"' + (l.zone || '') + '"',
-                    '"' + (l.violation_type || '') + '"',
-                    l.timestamp,
-                    l.status || 'PENDING',
-                    '"' + (l.supervisor_notes || '') + '"'
-                ]);
-            });
-
-            var csvContent = "data:text/csv;charset=utf-8," + rows.map(function(e) { return e.join(","); }).join("
-");
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "MPDP_Audit_Logs_" + Date.now() + ".csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-</script>
+    </script>
 </body>
 </html>
