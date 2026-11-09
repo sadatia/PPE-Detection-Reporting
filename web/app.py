@@ -774,30 +774,57 @@ def update_audit_status():
 @app.route("/api/compliance_stats")
 def get_compliance_stats():
     import sqlite3
+    from flask import request
     try:
+        time_range = request.args.get("range", "7d")
+        selected_zone = request.args.get("zone", "ALL")
+
+        # SQL time modifier
+        if time_range == "24h":
+            time_filter = "timestamp >= datetime('now', '-24 hours')"
+            group_format = "%H:00"
+        elif time_range == "30d":
+            time_filter = "timestamp >= datetime('now', '-30 days')"
+            group_format = "%Y-%m-%d"
+        else: # 7d default
+            time_filter = "timestamp >= datetime('now', '-7 days')"
+            group_format = "%Y-%m-%d"
+
+        zone_filter = ""
+        params = []
+        if selected_zone != "ALL":
+            zone_filter = " AND zone = ?"
+            params.append(selected_zone)
+
         conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
         cur = conn.cursor()
 
-        # Breakdown by violation type
-        cur.execute("""
+        # 1. Total count
+        cur.execute(f"SELECT COUNT(*) FROM violations WHERE {time_filter}{zone_filter}", params)
+        total_count = cur.fetchone()[0]
+
+        # 2. Category Breakdown
+        cur.execute(f"""
             SELECT violation_type, COUNT(*) 
             FROM violations 
-            GROUP BY violation_type
+            WHERE {time_filter}{zone_filter}
+            GROUP BY violation_type 
             ORDER BY COUNT(*) DESC
-        """)
-        type_breakdown = [{"type": r[0] if r[0] else "PPE Infraction", "count": r[1]} for r in cur.fetchall()]
+        """, params)
+        type_breakdown = [{"type": r[0] or "PPE Infraction", "count": r[1]} for r in cur.fetchall()]
 
-        # Breakdown by Zone
-        cur.execute("""
+        # 3. Zone Breakdown
+        cur.execute(f"""
             SELECT COALESCE(zone, 'Operational Site Area'), COUNT(*) 
             FROM violations 
-            GROUP BY zone
+            WHERE {time_filter}
+            GROUP BY zone 
             ORDER BY COUNT(*) DESC
         """)
         zone_breakdown = [{"zone": r[0], "count": r[1]} for r in cur.fetchall()]
 
-        # Shift Breakdown (Day: 08:00 - 16:59, Night: 17:00 - 07:59)
-        cur.execute("""
+        # 4. Shift Split
+        cur.execute(f"""
             SELECT 
                 CASE 
                     WHEN strftime('%H', timestamp) BETWEEN '08' AND '16' THEN 'Day'
@@ -805,28 +832,54 @@ def get_compliance_stats():
                 END AS shift,
                 COUNT(*)
             FROM violations
+            WHERE {time_filter}{zone_filter}
             GROUP BY shift
-        """)
-        shift_rows = dict(cur.fetchall())
+        """, params)
+        shift_data = dict(cur.fetchall())
+
+        # 5. Time-Series Timeline (for Trend Line Chart)
+        cur.execute(f"""
+            SELECT strftime('{group_format}', timestamp) as period, COUNT(*) 
+            FROM violations 
+            WHERE {time_filter}{zone_filter}
+            GROUP BY period 
+            ORDER BY period ASC
+        """, params)
+        timeline_rows = cur.fetchall()
+        timeline = [{"period": r[0], "count": r[1]} for r in timeline_rows]
+
+        # 6. Peak Hour Calculation
+        cur.execute(f"""
+            SELECT strftime('%H:00', timestamp) as hr, COUNT(*) as cnt
+            FROM violations 
+            WHERE {time_filter}{zone_filter}
+            GROUP BY hr 
+            ORDER BY cnt DESC LIMIT 1
+        """, params)
+        peak_row = cur.fetchone()
+        peak_hour = f"{peak_row[0]} ({peak_row[1]} events)" if peak_row else "N/A"
+
         conn.close()
 
-        day_count = shift_rows.get("Day", 0)
-        night_count = shift_rows.get("Night", 0)
-        total = sum([item["count"] for item in type_breakdown])
+        # Site Compliance Score estimation
+        compliance_pct = max(70.0, round(100.0 - (total_count / (24 * (7 if time_range == '7d' else 1) * 3)), 1))
 
         return jsonify({
             "status": "success",
-            "total_7d": total,
+            "range": time_range,
+            "total_violations": total_count,
+            "compliance_score": compliance_pct,
+            "peak_hour": peak_hour,
             "type_breakdown": type_breakdown,
             "zone_breakdown": zone_breakdown,
             "shift_data": {
-                "day": day_count,
-                "night": night_count
-            }
+                "day": shift_data.get("Day", 0),
+                "night": shift_data.get("Night", 0)
+            },
+            "timeline": timeline
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 @app.route("/api/system_telemetry")
 def get_system_telemetry():

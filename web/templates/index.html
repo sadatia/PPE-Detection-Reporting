@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { background-color: #0b1120; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -61,7 +63,7 @@
         <div class="flex items-center gap-6 text-xs font-mono">
             <div class="flex items-center gap-2">
                 <span class="text-slate-400">GPU:</span>
-                <span class="text-emerald-400 font-bold">GTX 1080 Ti (18% Load)</span>
+                <span id="hdr-gpu" class="text-emerald-400 font-bold">GTX 1080 Ti (19% Load)</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="text-slate-400">ENGINE:</span>
@@ -80,9 +82,7 @@
     <!-- MAIN 3-COLUMN WORKSPACE -->
     <div class="flex-1 flex overflow-hidden">
         
-        <!-- ============================================== -->
-        <!-- LEFT SIDEBAR: NAVIGATION & STATUS OVERVIEWS    -->
-        <!-- ============================================== -->
+        <!-- LEFT SIDEBAR: NAVIGATION & STATUS OVERVIEWS -->
         <aside class="w-64 bg-[#0d1424] border-r border-slate-800 flex flex-col p-3 gap-3 overflow-y-auto custom-scrollbar shrink-0">
             <!-- Navigation Buttons -->
             <div class="space-y-1.5">
@@ -115,6 +115,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         COMPLIANCE ANALYTICS
                     </span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">PRO</span>
                 </button>
 
                 <button onclick="switchTab('PERFORMANCE')" id="btn-tab-PERFORMANCE" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 transition">
@@ -129,7 +130,6 @@
 
             <!-- System Metrics Cards (Left Rail) -->
             <div class="space-y-2.5 text-xs font-mono">
-                <!-- Camera Stream Grid Status -->
                 <div class="glass-panel p-3 rounded-lg border border-slate-800">
                     <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1">
                         <span>Camera Stream Grid</span>
@@ -139,26 +139,23 @@
                     <div class="text-[10px] text-slate-500">100% Online • RTSP Substreams</div>
                 </div>
 
-                <!-- Site Safety Index -->
                 <div class="glass-panel p-3 rounded-lg border border-slate-800">
                     <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1">
                         <span>Site Safety Index</span>
                         <span class="text-cyan-400 font-bold">(Compliant)</span>
                     </div>
-                    <div class="text-xl font-black text-emerald-400">91.4%</div>
+                    <div id="side-compliance-idx" class="text-xl font-black text-emerald-400">91.4%</div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
                         <div class="bg-emerald-500 h-full rounded-full" style="width: 91.4%"></div>
                     </div>
                 </div>
 
-                <!-- Active PPE Infractions -->
                 <div class="glass-panel p-3 rounded-lg border border-slate-800">
                     <div class="text-[11px] text-slate-400 mb-1">Active PPE Infractions</div>
                     <div id="left-infraction-count" class="text-xl font-black text-amber-400">--</div>
                     <div class="text-[10px] text-slate-500">Automated Barix Actuation ON</div>
                 </div>
 
-                <!-- Fire & Optical Hazard -->
                 <div class="glass-panel p-3 rounded-lg border border-slate-800">
                     <div class="text-[11px] text-slate-400 mb-1">Fire & Optical Hazard</div>
                     <div class="text-base font-bold text-emerald-400 flex items-center gap-2">
@@ -167,221 +164,263 @@
                     <div class="text-[10px] text-slate-500">All Optical Zones Clear</div>
                 </div>
 
-                <!-- Synology Storage -->
                 <div class="glass-panel p-3 rounded-lg border border-slate-800">
                     <div class="text-[11px] text-slate-400 mb-1">Synology Storage (CIFS)</div>
-                    <div class="text-sm font-bold text-slate-200">10.74 TB Free</div>
+                    <div id="side-storage" class="text-sm font-bold text-slate-200">10.99 TB Free</div>
                     <div class="text-[10px] text-slate-500">/mnt/synology_cctv/snapshots</div>
                 </div>
             </div>
         </aside>
 
-        <!-- ============================================== -->
-        <!-- CENTER WORKSPACE: LIVE VIEW OR SITE MAP        -->
-        <!-- ============================================== -->
+        <!-- CENTER WORKSPACE -->
         <main class="flex-1 bg-[#090e1a] p-4 flex flex-col gap-3 overflow-hidden">
             
-            <!-- Filter Bar (Live View dropdowns matching design) -->
-            <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-base font-bold text-white tracking-wide">Live View</h2>
-                    <select id="filter-site" class="bg-[#131d35] border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
-                        <option value="ALL">All Sites (MPDP-PK1)</option>
-                        <option value="AREA_A">Area A (North Zone)</option>
-                        <option value="AREA_B">Area B (South Zone)</option>
-                    </select>
-                    <select id="filter-cam" onchange="filterCameraSelection(this.value)" class="bg-[#131d35] border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
-                        <option value="ALL">All Cameras (6/6)</option>
-                        <option value="CAM_01">Cam 01 — Site Entrance</option>
-                        <option value="CAM_02">Cam 02 — Hostel 2 & 3</option>
-                        <option value="CAM_03">Cam 03 — PTJV Gate</option>
-                        <option value="CAM_04">Cam 04 — Observation Deck</option>
-                        <option value="CAM_05">Cam 05 — CPA Castle</option>
-                        <option value="CAM_06">Cam 06 — Kamachan Gate</option>
-                    </select>
+            <!-- TAB 1: 2x3 CAMERA MATRIX -->
+            <div id="tab-GRID" class="flex-1 flex flex-col gap-3 overflow-hidden">
+                <!-- Filter Bar -->
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-base font-bold text-white tracking-wide">Live View</h2>
+                        <select id="filter-cam" onchange="filterCameraSelection(this.value)" class="bg-[#131d35] border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
+                            <option value="ALL">All Cameras (6/6)</option>
+                            <option value="CAM_01">Cam 01 — Main Entrance Gate</option>
+                            <option value="CAM_02">Cam 02 — Hostel 2 & 3 Entrance</option>
+                            <option value="CAM_03">Cam 03 — MPDP PTJV Gate</option>
+                            <option value="CAM_04">Cam 04 — Observation Deck</option>
+                            <option value="CAM_05">Cam 05 — CPA Castle</option>
+                            <option value="CAM_06">Cam 06 — Kamachan Gate</option>
+                        </select>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span>Hardware Decoded Substreams (25 FPS)</span>
+                    </div>
                 </div>
-                <div class="text-xs font-mono text-slate-400 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                    <span>Direct Dahua/Hik Hardware Substream</span>
-                </div>
-            </div>
 
-            <!-- TAB 1: 2x3 CAMERA MATRIX (Default View) -->
-            <div id="tab-GRID" class="flex-1 overflow-y-auto custom-scrollbar">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 h-full">
-                    
-                    <!-- CAM 01 -->
-                    <div id="card-CAM_01" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="font-mono text-xs font-bold text-slate-200">Cam 01 — Site Entrance</div>
-                            <span class="bg-red-600/90 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                <!-- 2x3 Matrix Grid -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 h-full">
+                        <!-- CAM 01 -->
+                        <div id="card-CAM_01" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="font-mono text-xs font-bold text-slate-200">Cam 01 — Site Entrance</div>
+                                <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                            </div>
+                            <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
+                                <img id="feed-CAM_01" src="/api/camera_frame/CAM_01?res=low" class="w-full h-full object-cover" alt="CAM_01" />
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
+                                <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
+                                <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    TOA Voice
+                                </button>
+                            </div>
                         </div>
-                        <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                            <img id="feed-CAM_01" src="/api/camera_frame/CAM_01?res=low" class="w-full h-full object-cover" alt="CAM_01" />
+
+                        <!-- CAM 02 -->
+                        <div id="card-CAM_02" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="font-mono text-xs font-bold text-slate-200">Cam 02 — Hostel 2 & 3</div>
+                                <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                            </div>
+                            <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
+                                <img id="feed-CAM_02" src="/api/camera_frame/CAM_02?res=low" class="w-full h-full object-cover" alt="CAM_02" />
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
+                                <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
+                                <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    TOA Voice
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
-                            <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
-                            <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+
+                        <!-- CAM 03 -->
+                        <div id="card-CAM_03" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="font-mono text-xs font-bold text-slate-200">Cam 03 — PTJV Gate</div>
+                                <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                            </div>
+                            <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
+                                <img id="feed-CAM_03" src="/api/camera_frame/CAM_03?res=low" class="w-full h-full object-cover" alt="CAM_03" />
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
+                                <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
+                                <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    TOA Voice
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CAM 04 -->
+                        <div id="card-CAM_04" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="font-mono text-xs font-bold text-slate-200">Cam 04 — Observation Deck</div>
+                                <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                            </div>
+                            <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
+                                <img id="feed-CAM_04" src="/api/camera_frame/CAM_04?res=low" class="w-full h-full object-cover" alt="CAM_04" />
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
+                                <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
+                                <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    TOA Voice
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CAM 05 -->
+                        <div id="card-CAM_05" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="font-mono text-xs font-bold text-slate-200">Cam 05 — CPA Castle</div>
+                                <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                            </div>
+                            <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
+                                <img id="feed-CAM_05" src="/api/camera_frame/CAM_05?res=low" class="w-full h-full object-cover" alt="CAM_05" />
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
+                                <span class="text-slate-400">Hikvision ISAPI • 25 FPS</span>
+                                <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                    TOA Voice
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CAM 06 -->
+                        <div id="card-CAM_06" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="font-mono text-xs font-bold text-slate-200">Cam 06 — Kamachan Gate</div>
+                                <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
+                            </div>
+                            <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
+                                <img id="feed-CAM_06" src="/api/camera_frame/CAM_06?res=low" class="w-full h-full object-cover" alt="CAM_06" />
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
+                                <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
+                                <button onclick="playHorn('10.220.148.16')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
                                 TOA Voice
                             </button>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- CAM 02 -->
-                    <div id="card-CAM_02" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="font-mono text-xs font-bold text-slate-200">Cam 02 — Hostel 2 & 3</div>
-                            <span class="bg-red-600/90 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
-                        </div>
-                        <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                            <img id="feed-CAM_02" src="/api/camera_frame/CAM_02?res=low" class="w-full h-full object-cover" alt="CAM_02" />
-                        </div>
-                        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
-                            <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
-                            <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
-                                TOA Voice
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CAM 03 -->
-                    <div id="card-CAM_03" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="font-mono text-xs font-bold text-slate-200">Cam 03 — PTJV Gate</div>
-                            <span class="bg-red-600/90 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
-                        </div>
-                        <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                            <img id="feed-CAM_03" src="/api/camera_frame/CAM_03?res=low" class="w-full h-full object-cover" alt="CAM_03" />
-                        </div>
-                        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
-                            <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
-                            <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
-                                TOA Voice
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CAM 04 -->
-                    <div id="card-CAM_04" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="font-mono text-xs font-bold text-slate-200">Cam 04 — Observation Deck</div>
-                            <span class="bg-red-600/90 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
-                        </div>
-                        <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                            <img id="feed-CAM_04" src="/api/camera_frame/CAM_04?res=low" class="w-full h-full object-cover" alt="CAM_04" />
-                        </div>
-                        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
-                            <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
-                            <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
-                                TOA Voice
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CAM 05 -->
-                    <div id="card-CAM_05" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="font-mono text-xs font-bold text-slate-200">Cam 05 — CPA Castle</div>
-                            <span class="bg-red-600/90 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
-                        </div>
-                        <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                            <img id="feed-CAM_05" src="/api/camera_frame/CAM_05?res=low" class="w-full h-full object-cover" alt="CAM_05" />
-                        </div>
-                        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
-                            <span class="text-slate-400">Hikvision ISAPI • 25 FPS</span>
-                            <button onclick="playHorn('10.220.148.13')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
-                                TOA Voice
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CAM 06 -->
-                    <div id="card-CAM_06" class="glass-panel-card rounded-xl p-2.5 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="font-mono text-xs font-bold text-slate-200">Cam 06 — Kamachan Gate</div>
-                            <span class="bg-red-600/90 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
-                        </div>
-                        <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                            <img id="feed-CAM_06" src="/api/camera_frame/CAM_06?res=low" class="w-full h-full object-cover" alt="CAM_06" />
-                        </div>
-                        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
-                            <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
-                            <button onclick="playHorn('10.220.148.16')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded border border-slate-700 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
-                                TOA Voice
-                            </button>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
-            <!-- TAB 2: GEOSPATIAL MAP & HEATMAP (Leaflet) -->
+            <!-- TAB 2: GEOSPATIAL MAP & HEATMAP -->
             <div id="tab-MAP" class="hidden flex-1 rounded-xl overflow-hidden relative">
                 <div id="site-geospatial-map" style="height: 100%; width: 100%; border-radius: 0.75rem;"></div>
             </div>
 
             <!-- TAB 3: INCIDENT AUDIT LOGS -->
             <div id="tab-LOGS" class="hidden flex-1 glass-panel rounded-xl p-4 overflow-y-auto custom-scrollbar">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-mono mb-3">Audit Log Registry</h3>
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-mono">Audit Log Registry</h3>
+                    <button onclick="loadAuditLogs()" class="px-2.5 py-1 text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700">Refresh Logs</button>
+                </div>
                 <div id="audit-table-container" class="text-xs font-mono">Loading full audit database...</div>
             </div>
 
-        
-            <!-- TAB 4: COMPLIANCE HEATMAP & ANALYTICS -->
-            <div id="tab-ANALYTICS" class="hidden flex-1 glass-panel rounded-xl p-5 overflow-y-auto custom-scrollbar font-mono text-xs space-y-5">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <!-- TAB 4: COMPLIANCE ANALYTICS (PRO) -->
+            <div id="tab-ANALYTICS" class="hidden flex-1 glass-panel rounded-xl p-4 overflow-y-auto custom-scrollbar font-mono text-xs space-y-4">
+                <!-- Toolbar -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                     <div>
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100">Site Compliance & Safety Analytics</h3>
-                        <p class="text-[11px] text-slate-400">Weekly statistical aggregation across all 6 monitored zones</p>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100">Site Compliance & Safety Analytics</h3>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-950 text-cyan-400 border border-cyan-800">PRO SUITE</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Statistical aggregation, velocity trends, and violation distribution</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold">7-Day Aggregation</span>
-                        <button onclick="loadComplianceAnalytics()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700">Refresh Data</button>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex bg-slate-900 border border-slate-700/80 rounded-lg p-0.5">
+                            <button onclick="setAnalyticsRange('24h')" id="btn-range-24h" class="px-2.5 py-1 rounded text-[11px] font-bold text-slate-400 hover:text-white transition">24H</button>
+                            <button onclick="setAnalyticsRange('7d')" id="btn-range-7d" class="px-2.5 py-1 rounded text-[11px] font-bold bg-cyan-600 text-white transition">7D</button>
+                            <button onclick="setAnalyticsRange('30d')" id="btn-range-30d" class="px-2.5 py-1 rounded text-[11px] font-bold text-slate-400 hover:text-white transition">30D</button>
+                        </div>
+
+                        <select id="ana-zone-filter" onchange="loadComplianceAnalytics()" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-slate-200 focus:outline-none">
+                            <option value="ALL">All Zones</option>
+                            <option value="Zone PLA1 - PTJV Gate">Zone PLA1 (PTJV Gate)</option>
+                            <option value="Zone A - Access Control">Zone A (Access Control)</option>
+                            <option value="Hostel Area">Hostel Area</option>
+                            <option value="Zone B - Hostel Area">Zone B (Hostels)</option>
+                            <option value="Zone D - MPDP Main Gate AREA">Zone D (Main Gate)</option>
+                            <option value="Zone A - Pumping Station Area">Zone A (Pumping Station)</option>
+                        </select>
+
+                        <button onclick="exportAnalyticsCSV()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-900/60 rounded-lg font-bold flex items-center gap-1.5 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Export CSV
+                        </button>
                     </div>
                 </div>
 
-                <!-- Metrics Highlights -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
-                        <div class="text-slate-400 text-[10px] uppercase font-bold">Total 7-Day Violations</div>
-                        <div id="ana-total-7d" class="text-2xl font-black text-slate-100 my-1">--</div>
-                        <div class="text-[10px] text-slate-500">Recorded across audit database</div>
+                <!-- 4 KPI Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="glass-panel-card p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Total Violations</div>
+                        <div id="ana-total-7d" class="text-2xl font-black text-slate-100 my-0.5">--</div>
+                        <div class="text-[10px] text-slate-500">Filtered timeframe total</div>
                     </div>
-                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
-                        <div class="text-slate-400 text-[10px] uppercase font-bold">Day vs Night Ratio</div>
-                        <div id="ana-shift-ratio" class="text-sm font-bold text-cyan-400 my-1">Analyzing...</div>
-                        <div class="text-[10px] text-slate-500">Day (08:00-17:00) vs Night shift</div>
+                    <div class="glass-panel-card p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Site Compliance Index</div>
+                        <div id="ana-compliance-rate" class="text-2xl font-black text-emerald-400 my-0.5">--%</div>
+                        <div class="text-[10px] text-slate-500">Target benchmark: >85%</div>
                     </div>
-                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
-                        <div class="text-slate-400 text-[10px] uppercase font-bold">Highest Risk Zone</div>
-                        <div id="ana-top-zone" class="text-sm font-bold text-amber-400 my-1">Analyzing...</div>
-                        <div class="text-[10px] text-slate-500">Requires targeted supervisor patrol</div>
+                    <div class="glass-panel-card p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Peak Violation Hour</div>
+                        <div id="ana-peak-hour" class="text-sm font-bold text-amber-400 my-1 truncate">Analyzing...</div>
+                        <div class="text-[10px] text-slate-500">Highest frequency window</div>
+                    </div>
+                    <div class="glass-panel-card p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400 text-[10px] uppercase font-bold">Shift Balance</div>
+                        <div id="ana-shift-ratio" class="text-sm font-bold text-cyan-400 my-1 truncate">Analyzing...</div>
+                        <div class="text-[10px] text-slate-500">Day (08-17) vs Night Shift</div>
                     </div>
                 </div>
 
-                <!-- Two-Column Breakdown: Type vs Zone -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Violation Types -->
-                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
-                        <h4 class="font-bold text-slate-200 mb-3 text-xs uppercase tracking-wide">Infractions by PPE Category</h4>
-                        <div id="ana-type-container" class="space-y-2.5">Loading category breakdown...</div>
+                <!-- Charts Row 1: Line Trend & PPE Donut -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+                    <div class="lg:col-span-8 glass-panel-card p-4 rounded-xl border border-slate-800 flex flex-col">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Violation Velocity Trend</span>
+                            <span class="text-[10px] text-slate-400">Events Over Time</span>
+                        </div>
+                        <div class="relative flex-1 min-h-[220px]">
+                            <canvas id="chart-timeline"></canvas>
+                        </div>
                     </div>
 
-                    <!-- Zone Distribution -->
-                    <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
-                        <h4 class="font-bold text-slate-200 mb-3 text-xs uppercase tracking-wide">Risk Ranking by Project Zone</h4>
-                        <div id="ana-zone-container" class="space-y-2.5">Loading zone ranking...</div>
+                    <div class="lg:col-span-4 glass-panel-card p-4 rounded-xl border border-slate-800 flex flex-col">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">PPE Infraction Share</span>
+                            <span class="text-[10px] text-slate-400">Category Share</span>
+                        </div>
+                        <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
+                            <canvas id="chart-ppe-donut"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2: Zone Density Bar -->
+                <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Project Zone Risk Density Ranking</span>
+                        <span class="text-[10px] text-slate-400">Higher count indicates high-risk work zone</span>
+                    </div>
+                    <div class="relative min-h-[190px]">
+                        <canvas id="chart-zone-bar"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 5: SYSTEM PERFORMANCE MONITORING -->
+            <!-- TAB 5: SYSTEM MONITORING -->
             <div id="tab-PERFORMANCE" class="hidden flex-1 glass-panel rounded-xl p-5 overflow-y-auto custom-scrollbar font-mono text-xs space-y-5">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                     <div>
@@ -395,7 +434,6 @@
 
                 <!-- Hardware Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- GPU Telemetry Card -->
                     <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
                         <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
                             <span>Inference Accelerator</span>
@@ -409,7 +447,6 @@
                         </div>
                     </div>
 
-                    <!-- Host System Card -->
                     <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
                         <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
                             <span>Host Server</span>
@@ -423,7 +460,6 @@
                         </div>
                     </div>
 
-                    <!-- Inference Engine Card -->
                     <div class="glass-panel-card p-4 rounded-xl border border-slate-800 space-y-2">
                         <div class="flex justify-between items-center text-slate-400 text-[10px] uppercase font-bold">
                             <span>Vision Core</span>
@@ -438,7 +474,6 @@
                     </div>
                 </div>
 
-                <!-- Peripherals Table -->
                 <div class="glass-panel-card p-4 rounded-xl border border-slate-800">
                     <h4 class="font-bold text-slate-200 mb-3 text-xs uppercase tracking-wide">Network Peripherals & Actuation Latency</h4>
                     <div id="perf-peripherals-table" class="space-y-2">Loading peripheral latency telemetry...</div>
@@ -447,11 +482,8 @@
 
         </main>
 
-        <!-- ============================================== -->
-        <!-- RIGHT RAIL: KPI CARDS & RECENT ALERTS FEED     -->
-        <!-- ============================================== -->
+        <!-- RIGHT RAIL -->
         <aside class="w-72 bg-[#0d1424] border-l border-slate-800 flex flex-col p-3.5 gap-4 overflow-y-auto custom-scrollbar shrink-0">
-            
             <!-- Top Metric Tiles -->
             <div class="space-y-2.5">
                 <div class="glass-panel p-3 rounded-lg border border-slate-800 flex items-center justify-between">
@@ -493,20 +525,92 @@
                 </div>
 
                 <div id="recent-alerts-list" class="space-y-2 overflow-y-auto custom-scrollbar flex-1 pr-1">
-                    <!-- Populated dynamically via fetchSidebar() -->
                     <div class="text-xs text-slate-500 font-mono py-2 text-center">Fetching live alerts...</div>
                 </div>
             </div>
-
         </aside>
 
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- INCIDENT AUDIT & TRIAGE MODAL -->
+    <div id="snapshot-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
+        <div class="glass-panel-card max-w-4xl w-full rounded-2xl border border-slate-700 shadow-2xl relative font-mono text-xs flex flex-col max-h-[92vh] overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/80 bg-slate-900/60 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span id="modal-id-badge" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold text-xs">#0000</span>
+                    <h3 id="modal-title" class="font-bold text-slate-100 text-sm">Incident Evidence Review</h3>
+                </div>
+                <button onclick="closeSnapshotModal()" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">✕ Close (ESC)</button>
+            </div>
+
+            <div class="p-5 flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-12 gap-5">
+                <div class="md:col-span-7 flex flex-col bg-black rounded-xl overflow-hidden border border-slate-800">
+                    <div class="flex-1 flex items-center justify-center p-1 bg-black min-h-[300px]">
+                        <img id="modal-img" src="" alt="Evidence" class="max-h-[50vh] w-full object-contain rounded" />
+                    </div>
+                    <div class="p-2.5 bg-slate-900/80 border-t border-slate-800 flex justify-between items-center text-[11px]">
+                        <span id="modal-file-path" class="text-slate-500 truncate max-w-xs">/mnt/synology_cctv/...</span>
+                        <a id="modal-download" href="#" target="_blank" class="text-cyan-400 hover:underline">View Full Image ↗</a>
+                    </div>
+                </div>
+
+                <div class="md:col-span-5 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="glass-panel p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
+                            <div class="flex justify-between"><span class="text-slate-400">Camera:</span> <span id="modal-cam" class="font-bold text-slate-200">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Zone:</span> <span id="modal-zone" class="text-slate-300">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Violation:</span> <span id="modal-violation" class="text-amber-400 font-bold">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Timestamp:</span> <span id="modal-time" class="text-slate-300">--</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Current Status:</span> <span id="modal-status-pill" class="px-1.5 py-0.5 rounded text-[10px] font-bold">--</span></div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Supervisor Notes / Remarks</label>
+                            <textarea id="modal-notes" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs font-mono focus:border-cyan-500 focus:outline-none" placeholder="Enter corrective action or reason for false positive..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-slate-800">
+                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Action & Rectification</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="submitAuditAction('RESOLVED')" class="px-3 py-2 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Rectified
+                            </button>
+                            <button onclick="submitAuditAction('ACKNOWLEDGED')" class="px-3 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Acknowledge
+                            </button>
+                            <button onclick="submitAuditAction('FALSE_POSITIVE')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-900/40 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                False Positive
+                            </button>
+                            <button onclick="submitAuditAction('PENDING')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-900/40 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Reset Pending
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE JAVASCRIPT CONTROLLER -->
     <script>
         var currentTab = 'GRID';
         var siteMapInstance = null;
+        var auditLogsData = [];
+        var currentActiveIncidentId = null;
 
+        // Chart.js Instances
+        var currentAnalyticsRange = '7d';
+        var chartTimelineInstance = null;
+        var chartPpeInstance = null;
+        var chartZoneInstance = null;
+        var currentRawAnalyticsData = null;
+
+        // Navigation Controller
         function switchTab(tabId) {
             currentTab = tabId;
             var tabs = ['GRID', 'MAP', 'LOGS', 'ANALYTICS', 'PERFORMANCE'];
@@ -529,6 +633,7 @@
                 activeBtn.classList.remove('text-slate-300');
             }
 
+            // Tab-specific fetch triggers
             if (tabId === 'ANALYTICS') {
                 loadComplianceAnalytics();
             } else if (tabId === 'PERFORMANCE') {
@@ -560,18 +665,20 @@
                 .then(function(res) {
                     if (res.status !== 'success') return;
                     
-                    document.getElementById('kpi-active-alerts').innerText = res.active_alerts_today;
-                    document.getElementById('left-infraction-count').innerText = res.active_alerts_today + ' (Unverified)';
+                    var actEl = document.getElementById('kpi-active-alerts');
+                    var infEl = document.getElementById('left-infraction-count');
+                    if (actEl) actEl.innerText = res.active_alerts_today;
+                    if (infEl) infEl.innerText = res.active_alerts_today + ' (Unverified)';
 
                     var container = document.getElementById('recent-alerts-list');
                     if (!container) return;
                     container.innerHTML = '';
 
-                    res.recent_alerts.forEach(function(alert) {
+                    (res.recent_alerts || []).forEach(function(alert) {
                         var card = document.createElement('div');
                         card.className = 'glass-panel p-2.5 rounded-lg border border-slate-800 text-xs font-mono space-y-1';
                         
-                        var badgeColor = alert.status === 'ACTIVE' ? 'bg-red-500/20 text-red-400 border-red-500/40' : 'bg-amber-500/20 text-amber-400 border-amber-500/40';
+                        var badgeColor = alert.status === 'ACTIVE' || alert.status === 'PENDING' ? 'bg-red-500/20 text-red-400 border-red-500/40' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
                         
                         card.innerHTML = `
                             <div class="flex items-center justify-between">
@@ -589,6 +696,389 @@
         setInterval(fetchSidebar, 4000);
         fetchSidebar();
 
+        // Status Badge Helper
+        function getStatusBadge(st) {
+            st = st || 'PENDING';
+            if (st === 'RESOLVED' || st === 'RECTIFIED') {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">RESOLVED</span>';
+            } else if (st === 'ACKNOWLEDGED') {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-blue-950 text-blue-400 border border-blue-800">ACKNOWLEDGED</span>';
+            } else if (st === 'FALSE_POSITIVE') {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700 line-through">FALSE POS</span>';
+            } else {
+                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-red-950 text-red-400 border border-red-800">PENDING</span>';
+            }
+        }
+
+        // Audit Logs Loader
+        function loadAuditLogs() {
+            var container = document.getElementById('audit-table-container');
+            if (!container) return;
+            container.innerHTML = '<div class="text-xs text-slate-400 py-4 font-mono animate-pulse">Loading audit database records...</div>';
+
+            fetch('/api/logs?limit=250')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.status !== 'success' || !res.logs || res.logs.length === 0) {
+                        container.innerHTML = '<div class="text-xs text-slate-500 py-4">No logged incidents found in audit registry.</div>';
+                        return;
+                    }
+
+                    auditLogsData = res.logs;
+                    var navBadge = document.getElementById('nav-log-count');
+                    if (navBadge) navBadge.innerText = res.logs.length + '+';
+
+                    var html = `
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs font-mono">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider">
+                                        <th class="py-2.5 px-3">ID</th>
+                                        <th class="py-2.5 px-3">Camera Node</th>
+                                        <th class="py-2.5 px-3">Zone</th>
+                                        <th class="py-2.5 px-3">Violation Details</th>
+                                        <th class="py-2.5 px-3">Timestamp</th>
+                                        <th class="py-2.5 px-3">Status</th>
+                                        <th class="py-2.5 px-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/60">
+                    `;
+
+                    res.logs.forEach(function(item, idx) {
+                        var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
+                        var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
+
+                        html += `
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="py-2 px-3 text-slate-500">#${item.id}</td>
+                                <td class="py-2 px-3 font-bold text-slate-200">
+                                    ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name})</span>
+                                </td>
+                                <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
+                                <td class="py-2 px-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                                        ${item.violation_type}
+                                    </span>
+                                </td>
+                                <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
+                                <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
+                                <td class="py-2 px-3 text-right">
+                                    <button onclick="openSnapshotModal(auditLogsData[${idx}])" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
+                                        Review / Triage
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    container.innerHTML = html;
+                })
+                .catch(function(err) {
+                    container.innerHTML = '<div class="text-xs text-red-400 py-4 font-mono">Failed to query audit database: ' + err + '</div>';
+                });
+        }
+
+        // Triage Modal Controls
+        function openSnapshotModal(item) {
+            currentActiveIncidentId = item.id;
+            var m = document.getElementById('snapshot-modal');
+            
+            document.getElementById('modal-id-badge').innerText = '#' + item.id;
+            document.getElementById('modal-title').innerText = item.camera_id + ' — ' + item.violation_type;
+            document.getElementById('modal-cam').innerText = item.camera_id + ' (' + item.camera_name + ')';
+            document.getElementById('modal-zone').innerText = item.zone || 'Site Operational Area';
+            document.getElementById('modal-violation').innerText = item.violation_type;
+            document.getElementById('modal-time').innerText = item.timestamp;
+            document.getElementById('modal-notes').value = item.supervisor_notes || '';
+            document.getElementById('modal-status-pill').innerHTML = getStatusBadge(item.status);
+            document.getElementById('modal-file-path').innerText = item.snapshot_path || 'No local file';
+
+            var img = document.getElementById('modal-img');
+            img.src = '/api/snapshot/' + item.id;
+            document.getElementById('modal-download').href = '/api/snapshot/' + item.id;
+
+            m.classList.remove('hidden');
+        }
+
+        function closeSnapshotModal() {
+            var m = document.getElementById('snapshot-modal');
+            if (m) m.classList.add('hidden');
+            currentActiveIncidentId = null;
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSnapshotModal();
+        });
+
+        function submitAuditAction(newStatus) {
+            if (!currentActiveIncidentId) return;
+            var notes = document.getElementById('modal-notes').value;
+
+            fetch('/api/audit/update_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: currentActiveIncidentId,
+                    status: newStatus,
+                    notes: notes
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.status === 'success') {
+                    closeSnapshotModal();
+                    loadAuditLogs();
+                    fetchSidebar();
+                } else {
+                    alert('Failed to update status: ' + (res.message || 'Server error'));
+                }
+            })
+            .catch(function(e) { alert('Error: ' + e); });
+        }
+
+        // Compliance Analytics Controller & Chart.js Engine
+        function setAnalyticsRange(rng) {
+            currentAnalyticsRange = rng;
+            ['24h', '7d', '30d'].forEach(function(r) {
+                var btn = document.getElementById('btn-range-' + r);
+                if (btn) {
+                    if (r === rng) {
+                        btn.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-cyan-600 text-white transition';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded text-[11px] font-bold text-slate-400 hover:text-white transition';
+                    }
+                }
+            });
+            loadComplianceAnalytics();
+        }
+
+        function loadComplianceAnalytics() {
+            var zoneFilterEl = document.getElementById('ana-zone-filter');
+            var selectedZone = zoneFilterEl ? zoneFilterEl.value : 'ALL';
+
+            fetch('/api/compliance_stats?range=' + currentAnalyticsRange + '&zone=' + encodeURIComponent(selectedZone))
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.status !== 'success') return;
+                    currentRawAnalyticsData = res;
+
+                    var totalEl = document.getElementById('ana-total-7d');
+                    var scoreEl = document.getElementById('ana-compliance-rate');
+                    var peakEl = document.getElementById('ana-peak-hour');
+                    var shiftEl = document.getElementById('ana-shift-ratio');
+
+                    if (totalEl) totalEl.innerText = (res.total_violations || 0).toLocaleString();
+                    if (scoreEl) scoreEl.innerText = (res.compliance_score || 91.4) + '%';
+                    if (peakEl) peakEl.innerText = res.peak_hour || '11:00';
+                    if (shiftEl && res.shift_data) {
+                        shiftEl.innerText = (res.shift_data.day || 0) + ' Day / ' + (res.shift_data.night || 0) + ' Night';
+                    }
+
+                    renderTimelineChart(res.timeline);
+                    renderPpeDonutChart(res.type_breakdown);
+                    renderZoneBarChart(res.zone_breakdown);
+                })
+                .catch(function(err) { console.error('Chart load error:', err); });
+        }
+
+        function renderTimelineChart(timeline) {
+            var ctx = document.getElementById('chart-timeline');
+            if (!ctx) return;
+            if (chartTimelineInstance) chartTimelineInstance.destroy();
+
+            var labels = (timeline || []).map(function(t) { return t.period; });
+            var data = (timeline || []).map(function(t) { return t.count; });
+
+            chartTimelineInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Violations',
+                        data: data,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#38bdf8',
+                        pointBorderColor: '#0b1120',
+                        pointHoverRadius: 6,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#0f172a', titleColor: '#38bdf8', borderColor: '#334155', borderWidth: 1 }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } } },
+                        y: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderPpeDonutChart(types) {
+            var ctx = document.getElementById('chart-ppe-donut');
+            if (!ctx) return;
+            if (chartPpeInstance) chartPpeInstance.destroy();
+
+            var labels = (types || []).map(function(t) { return t.type; });
+            var data = (types || []).map(function(t) { return t.count; });
+            var colors = ['#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981', '#ec4899', '#64748b'];
+
+            chartPpeInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderColor: '#0b1120',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#cbd5e1', font: { family: 'monospace', size: 9 }, boxWidth: 10, padding: 8 }
+                        },
+                        tooltip: { backgroundColor: '#0f172a', borderColor: '#334155', borderWidth: 1 }
+                    }
+                }
+            });
+        }
+
+        function renderZoneBarChart(zones) {
+            var ctx = document.getElementById('chart-zone-bar');
+            if (!ctx) return;
+            if (chartZoneInstance) chartZoneInstance.destroy();
+
+            var labels = (zones || []).map(function(z) { return z.zone; });
+            var data = (zones || []).map(function(z) { return z.count; });
+
+            chartZoneInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Incidents Recorded',
+                        data: data,
+                        backgroundColor: '#f59e0b',
+                        hoverBackgroundColor: '#fbbf24',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#0f172a', borderColor: '#334155', borderWidth: 1 }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } } },
+                        y: { grid: { display: false }, ticks: { color: '#e2e8f0', font: { family: 'monospace', size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function exportAnalyticsCSV() {
+            if (!currentRawAnalyticsData) return;
+            var rows = [["Category / Metric", "Detail / Value"]];
+            rows.push(["Timeframe", currentRawAnalyticsData.range]);
+            rows.push(["Total Violations", currentRawAnalyticsData.total_violations]);
+            rows.push(["Site Compliance Score", currentRawAnalyticsData.compliance_score + "%"]);
+            rows.push(["Peak Hour", currentRawAnalyticsData.peak_hour]);
+            rows.push(["Day Shift Incidents", currentRawAnalyticsData.shift_data ? currentRawAnalyticsData.shift_data.day : 0]);
+            rows.push(["Night Shift Incidents", currentRawAnalyticsData.shift_data ? currentRawAnalyticsData.shift_data.night : 0]);
+            rows.push(["", ""]);
+            rows.push(["PPE Infraction Type", "Incident Count"]);
+            (currentRawAnalyticsData.type_breakdown || []).forEach(function(t) { rows.push([t.type, t.count]); });
+            rows.push(["", ""]);
+            rows.push(["Project Zone", "Incident Count"]);
+            (currentRawAnalyticsData.zone_breakdown || []).forEach(function(z) { rows.push([z.zone, z.count]); });
+
+            var csvContent = "data:text/csv;charset=utf-8," + rows.map(function(e) { return e.join(","); }).join("\n");
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "MPDP_Safety_Analytics_" + currentAnalyticsRange + "_" + Date.now() + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // System Performance Telemetry Loader
+        function loadSystemPerformance() {
+            fetch('/api/system_telemetry')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.status !== 'success') return;
+
+                    var g = res.gpu || {};
+                    var s = res.system || {};
+
+                    var gpuLoad = document.getElementById('perf-gpu-load');
+                    var gpuTemp = document.getElementById('perf-gpu-temp');
+                    var gpuVram = document.getElementById('perf-gpu-vram');
+                    if (gpuLoad) gpuLoad.innerText = (g.load !== undefined ? g.load : '--') + '%';
+                    if (gpuTemp) gpuTemp.innerText = (g.temp !== undefined ? g.temp : '--') + '°C';
+                    if (gpuVram) gpuVram.innerText = (g.mem_used || '--') + ' / ' + (g.mem_total || '--') + ' MB';
+
+                    var cpuLoad = document.getElementById('perf-cpu-load');
+                    var ramUsed = document.getElementById('perf-ram-used');
+                    var diskFree = document.getElementById('perf-disk-free');
+                    if (cpuLoad) cpuLoad.innerText = (s.cpu_load !== undefined ? s.cpu_load : '--') + '%';
+                    if (ramUsed) ramUsed.innerText = (s.ram_used_gb || '--') + ' / ' + (s.ram_total_gb || '--') + ' GB';
+                    if (diskFree) diskFree.innerText = (s.disk_free_gb || '--') + ' GB Free';
+
+                    var tbl = document.getElementById('perf-peripherals-table');
+                    if (tbl && res.network_peripherals) {
+                        var html = `
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead>
+                                    <tr class="text-slate-400 border-b border-slate-800 pb-1">
+                                        <th class="py-1">Device Name</th>
+                                        <th class="py-1">IP Address</th>
+                                        <th class="py-1">Ping Latency</th>
+                                        <th class="py-1 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        res.network_peripherals.forEach(function(d) {
+                            html += `
+                                <tr class="border-b border-slate-800/40">
+                                    <td class="py-1.5 font-bold text-slate-200">${d.name}</td>
+                                    <td class="py-1.5 text-slate-400">${d.ip}</td>
+                                    <td class="py-1.5 text-cyan-400">${d.latency_ms} ms</td>
+                                    <td class="py-1.5 text-right"><span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">${d.status}</span></td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table>';
+                        tbl.innerHTML = html;
+                    }
+                })
+                .catch(function(e) { console.error(e); });
+        }
+
         // Barix PA Horn Trigger
         function playHorn(speakerIp) {
             fetch('/api/trigger_horn', {
@@ -598,7 +1088,6 @@
             }).then(function() { alert('Actuated TOA / Barix IP Horn at ' + speakerIp); });
         }
 
-        // Master Evacuation Alert
         function triggerMasterEvac() {
             if (confirm('CONFIRM MASTER SITE EVACUATION: Broadcast live alert over all Barix speakers?')) {
                 fetch('/api/trigger_horn', {
@@ -609,7 +1098,7 @@
             }
         }
 
-        // Camera Filter Function
+        // Camera Filter
         function filterCameraSelection(val) {
             var cards = ['CAM_01', 'CAM_02', 'CAM_03', 'CAM_04', 'CAM_05', 'CAM_06'];
             cards.forEach(function(cid) {
@@ -624,7 +1113,7 @@
             });
         }
 
-        // Leaflet Site Map with Area A, Area B, and Heatmaps
+        // Leaflet Site Map
         function initSiteMap() {
             if (siteMapInstance) return;
 
@@ -632,7 +1121,6 @@
 
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(siteMapInstance);
 
-            // Area A and Area B Polygons
             function dms(d, m, s) { return d + (m / 60.0) + (s / 3600.0); }
             var areaA_coords = [[dms(21, 41, 51.40), dms(91, 52, 8.34)], [dms(21, 41, 31.89), dms(91, 52, 5.54)], [dms(21, 41, 27.72), dms(91, 52, 5.34)], [dms(21, 41, 27.17), dms(91, 51, 49.00)], [dms(21, 41, 21.93), dms(91, 51, 48.98)], [dms(21, 41, 21.51), dms(91, 51, 45.22)], [dms(21, 41, 11.09), dms(91, 51, 44.62)], [dms(21, 41, 11.75), dms(91, 51, 31.53)], [dms(21, 41, 12.47), dms(91, 51, 30.72)], [dms(21, 41, 30.23), dms(91, 51, 30.64)], [dms(21, 41, 30.48), dms(91, 51, 29.99)], [dms(21, 41, 38.15), dms(91, 51, 30.03)], [dms(21, 41, 38.09), dms(91, 51, 35.33)], [dms(21, 41, 39.64), dms(91, 51, 37.96)], [dms(21, 41, 38.80), dms(91, 51, 43.10)], [dms(21, 41, 48.92), dms(91, 51, 54.67)], [dms(21, 41, 51.45), dms(91, 51, 59.12)]];
             var areaB_coords = [[dms(21, 40, 53.48), dms(91, 51, 45.70)], [dms(21, 40, 53.04), dms(91, 51, 53.08)], [dms(21, 40, 51.41), dms(91, 51, 53.15)], [dms(21, 40, 51.84), dms(91, 51, 55.99)], [dms(21, 40, 50.89), dms(91, 51, 56.41)], [dms(21, 40, 51.41), dms(91, 52, 37.11)], [dms(21, 40, 41.88), dms(91, 52, 36.32)], [dms(21, 40, 41.88), dms(91, 52, 9.51)], [dms(21, 40, 36.02), dms(91, 52, 9.52)], [dms(21, 40, 36.10), dms(91, 51, 53.57)], [dms(21, 40, 38.25), dms(91, 51, 50.70)], [dms(21, 40, 48.26), dms(91, 51, 46.27)], [dms(21, 40, 52.62), dms(91, 51, 46.42)]];
@@ -643,7 +1131,6 @@
             var polyB = L.polygon(areaB_coords, { color: '#f59e0b', weight: 2, dashArray: '4, 6', fillColor: '#d97706', fillOpacity: 0.20 }).addTo(siteMapInstance);
             L.tooltip({ permanent: true, direction: 'center', className: 'area-zone-badge area-b-badge' }).setContent('PROJECT AREA B<br><span style="font-size:9px; color:#cbd5e1; font-weight:normal;">South Zone</span>').setLatLng(polyB.getBounds().getCenter()).addTo(siteMapInstance);
 
-            // Fetch live camera markers and heatmap points
             fetch('/api/map_data')
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
@@ -685,224 +1172,6 @@
                     if (bounds.length > 0) siteMapInstance.fitBounds(bounds, { padding: [40, 40] });
                 });
         }
-    
-        var currentActiveIncidentId = null;
-
-        function getStatusBadge(st) {
-            st = st || 'PENDING';
-            if (st === 'RESOLVED' || st === 'RECTIFIED') {
-                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">RESOLVED</span>';
-            } else if (st === 'ACKNOWLEDGED') {
-                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-blue-950 text-blue-400 border border-blue-800">ACKNOWLEDGED</span>';
-            } else if (st === 'FALSE_POSITIVE') {
-                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700 line-through">FALSE POS</span>';
-            } else {
-                return '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-red-950 text-red-400 border border-red-800">PENDING</span>';
-            }
-        }
-
-        function openSnapshotModal(item) {
-            currentActiveIncidentId = item.id;
-            var m = document.getElementById('snapshot-modal');
-            
-            document.getElementById('modal-id-badge').innerText = '#' + item.id;
-            document.getElementById('modal-title').innerText = item.camera_id + ' — ' + item.violation_type;
-            document.getElementById('modal-cam').innerText = item.camera_id + ' (' + item.camera_name + ')';
-            document.getElementById('modal-zone').innerText = item.zone || 'Site Operational Area';
-            document.getElementById('modal-violation').innerText = item.violation_type;
-            document.getElementById('modal-time').innerText = item.timestamp;
-            document.getElementById('modal-notes').value = item.supervisor_notes || '';
-            document.getElementById('modal-status-pill').innerHTML = getStatusBadge(item.status);
-            document.getElementById('modal-file-path').innerText = item.snapshot_path || 'No local file';
-
-            var img = document.getElementById('modal-img');
-            img.src = '/api/snapshot/' + item.id;
-            document.getElementById('modal-download').href = '/api/snapshot/' + item.id;
-
-            m.classList.remove('hidden');
-        }
-
-        function closeSnapshotModal() {
-            var m = document.getElementById('snapshot-modal');
-            if (m) m.classList.add('hidden');
-            currentActiveIncidentId = null;
-        }
-
-        function submitAuditAction(newStatus) {
-            if (!currentActiveIncidentId) return;
-            var notes = document.getElementById('modal-notes').value;
-
-            fetch('/api/audit/update_status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: currentActiveIncidentId,
-                    status: newStatus,
-                    notes: notes
-                })
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.status === 'success') {
-                    closeSnapshotModal();
-                    loadAuditLogs();
-                    if (typeof fetchSidebar === 'function') fetchSidebar();
-                } else {
-                    alert('Failed to update status: ' + (res.message || 'Server error'));
-                }
-            })
-            .catch(function(e) {
-                alert('Network error updating status: ' + e);
-            });
-        }
-
-        // Cache incident objects in memory for fast lookup
-        var auditLogsData = [];
-
-        function loadAuditLogs() {
-            var container = document.getElementById('audit-table-container');
-            if (!container) return;
-            container.innerHTML = '<div class="text-xs text-slate-400 py-4 font-mono animate-pulse">Loading audit database records...</div>';
-
-            fetch('/api/logs?limit=250')
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res.status !== 'success' || !res.logs || res.logs.length === 0) {
-                        container.innerHTML = '<div class="text-xs text-slate-500 py-4">No logged incidents found in audit registry.</div>';
-                        return;
-                    }
-
-                    auditLogsData = res.logs;
-                    var navBadge = document.getElementById('nav-log-count');
-                    if (navBadge) navBadge.innerText = res.logs.length + '+';
-
-                    var html = `
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs font-mono">
-                                <thead>
-                                    <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider">
-                                        <th class="py-2.5 px-3">ID</th>
-                                        <th class="py-2.5 px-3">Camera Node</th>
-                                        <th class="py-2.5 px-3">Zone</th>
-                                        <th class="py-2.5 px-3">Violation Details</th>
-                                        <th class="py-2.5 px-3">Timestamp</th>
-                                        <th class="py-2.5 px-3">Status</th>
-                                        <th class="py-2.5 px-3 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-800/60">
-                    `;
-
-                    res.logs.forEach(function(item, idx) {
-                        var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
-                        var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
-                        
-                        html += `
-                            <tr class="hover:bg-slate-800/40 transition">
-                                <td class="py-2 px-3 text-slate-500">#${item.id}</td>
-                                <td class="py-2 px-3 font-bold text-slate-200">
-                                    ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name})</span>
-                                </td>
-                                <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
-                                <td class="py-2 px-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                                        ${item.violation_type}
-                                    </span>
-                                </td>
-                                <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
-                                <td class="py-2 px-3">${getStatusBadge(item.status)}</td>
-                                <td class="py-2 px-3 text-right">
-                                    <button onclick="openSnapshotModal(auditLogsData[${idx}])" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 hover:text-white transition">
-                                        Review / Triage
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-
-                    html += `
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-                    container.innerHTML = html;
-                })
-                .catch(function(err) {
-                    container.innerHTML = '<div class="text-xs text-red-400 py-4 font-mono">Failed to query audit database: ' + err + '</div>';
-                });
-        }
-
-</script>
-
-    <!-- INCIDENT AUDIT & TRIAGE MODAL -->
-    <div id="snapshot-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
-        <div class="glass-panel-card max-w-4xl w-full rounded-2xl border border-slate-700 shadow-2xl relative font-mono text-xs flex flex-col max-h-[92vh] overflow-hidden">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/80 bg-slate-900/60 shrink-0">
-                <div class="flex items-center gap-3">
-                    <span id="modal-id-badge" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold text-xs">#0000</span>
-                    <h3 id="modal-title" class="font-bold text-slate-100 text-sm">Incident Evidence Review</h3>
-                </div>
-                <button onclick="closeSnapshotModal()" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">✕ Close (ESC)</button>
-            </div>
-
-            <!-- Modal Content (2-Column Layout: Evidence Left, Details & Triage Right) -->
-            <div class="p-5 flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-12 gap-5">
-                <!-- Evidence Image -->
-                <div class="md:col-span-7 flex flex-col bg-black rounded-xl overflow-hidden border border-slate-800">
-                    <div class="flex-1 flex items-center justify-center p-1 bg-black min-h-[300px]">
-                        <img id="modal-img" src="" alt="Evidence" class="max-h-[50vh] w-full object-contain rounded" />
-                    </div>
-                    <div class="p-2.5 bg-slate-900/80 border-t border-slate-800 flex justify-between items-center text-[11px]">
-                        <span id="modal-file-path" class="text-slate-500 truncate max-w-xs">/mnt/synology_cctv/...</span>
-                        <a id="modal-download" href="#" target="_blank" class="text-cyan-400 hover:underline">View Full Image ↗</a>
-                    </div>
-                </div>
-
-                <!-- Triage Actions & Metadata -->
-                <div class="md:col-span-5 flex flex-col justify-between space-y-4">
-                    <div class="space-y-3">
-                        <div class="glass-panel p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
-                            <div class="flex justify-between"><span class="text-slate-400">Camera:</span> <span id="modal-cam" class="font-bold text-slate-200">--</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Zone:</span> <span id="modal-zone" class="text-slate-300">--</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Violation:</span> <span id="modal-violation" class="text-amber-400 font-bold">--</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Timestamp:</span> <span id="modal-time" class="text-slate-300">--</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Current Status:</span> <span id="modal-status-pill" class="px-1.5 py-0.5 rounded text-[10px] font-bold">--</span></div>
-                        </div>
-
-                        <!-- Supervisor Notes Field -->
-                        <div>
-                            <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Supervisor Notes / Remarks</label>
-                            <textarea id="modal-notes" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs font-mono focus:border-cyan-500 focus:outline-none" placeholder="Enter corrective action or reason for false positive..."></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Triage Action Buttons -->
-                    <div class="space-y-2 pt-2 border-t border-slate-800">
-                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Action & Rectification</div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="submitAuditAction('RESOLVED')" class="px-3 py-2 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                Rectified / Resolved
-                            </button>
-                            <button onclick="submitAuditAction('ACKNOWLEDGED')" class="px-3 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                Acknowledge
-                            </button>
-                            <button onclick="submitAuditAction('FALSE_POSITIVE')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-900/40 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                False Positive
-                            </button>
-                            <button onclick="submitAuditAction('PENDING')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-900/40 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                Reset Pending
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    </script>
 </body>
 </html>
