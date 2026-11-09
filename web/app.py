@@ -692,21 +692,20 @@ def get_sidebar_summary():
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
 
-        # Count active alerts today
+        # Count violations today
         cur.execute("SELECT COUNT(*) FROM violations WHERE date(timestamp) = date('now', 'localtime')")
         today_alerts = cur.fetchone()[0]
 
-        # Recent 5 alerts with formatted metadata
+        # Recent 5 alerts using audit_status
         cur.execute("""
-            SELECT id, camera_id, violation_type, timestamp, 
-                   COALESCE(status, 'ACTIVE') as status
+            SELECT id, camera_id, zone, violation_type, timestamp, 
+                   audit_status AS status
             FROM violations 
             ORDER BY id DESC LIMIT 5
         """)
         rows = [dict(r) for r in cur.fetchall()]
         conn.close()
 
-        # Camera name lookup
         cam_names = {
             "CAM_01": "Main Entrance Gate",
             "CAM_02": "Hostel 2 & 3 Entrance",
@@ -728,6 +727,60 @@ def get_sidebar_summary():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route("/api/snapshot/<int:incident_id>")
+def get_incident_snapshot(incident_id):
+    import sqlite3, os
+    from flask import send_file, abort
+    try:
+        conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
+        cur = conn.cursor()
+        cur.execute("SELECT snapshot_path FROM violations WHERE id = ?", (incident_id,))
+        row = cur.fetchone()
+        conn.close()
+
+        if row and row[0] and os.path.exists(row[0]):
+            return send_file(row[0], mimetype="image/jpeg")
+        else:
+            abort(404)
+    except Exception:
+        abort(404)
+
+@app.route("/api/logs")
+def get_incident_logs():
+    import sqlite3
+    try:
+        limit = int(request.args.get("limit", 250))
+        conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT id, timestamp, camera_id, zone, violation_type, 
+                   severity, persistence_seconds, snapshot_path, 
+                   audit_status AS status
+            FROM violations 
+            ORDER BY id DESC LIMIT ?
+        """, (limit,))
+        
+        rows = [dict(r) for r in cur.fetchall()]
+        conn.close()
+
+        cam_names = {
+            "CAM_01": "Main Entrance Gate",
+            "CAM_02": "Hostel 2 & 3 Entrance",
+            "CAM_03": "MPDP PTJV Gate",
+            "CAM_04": "Observation Deck",
+            "CAM_05": "CPA Castle",
+            "CAM_06": "Kamachan Gate"
+        }
+        for item in rows:
+            item["camera_name"] = cam_names.get(item["camera_id"], item["camera_id"])
+            if not item.get("zone"):
+                item["zone"] = "Site Operational Area"
+
+        return jsonify({"status": "success", "total": len(rows), "logs": rows})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)

@@ -416,7 +416,9 @@
                 activeBtn.classList.remove('text-slate-300');
             }
 
-            if (tabId === 'MAP') {
+            if (tabId === 'LOGS') {
+                loadAuditLogs();
+            } else if (tabId === 'MAP') {
                 setTimeout(function() {
                     initSiteMap();
                     if (siteMapInstance) siteMapInstance.invalidateSize();
@@ -566,6 +568,124 @@
                     if (bounds.length > 0) siteMapInstance.fitBounds(bounds, { padding: [40, 40] });
                 });
         }
-    </script>
+    
+        function openSnapshotModal(id, meta) {
+            var m = document.getElementById('snapshot-modal');
+            var img = document.getElementById('modal-img');
+            var title = document.getElementById('modal-title');
+            var metaSpan = document.getElementById('modal-meta');
+            var dl = document.getElementById('modal-download');
+            
+            img.src = '/api/snapshot/' + id;
+            title.innerText = 'Incident #' + id + ' Evidence Snapshot';
+            metaSpan.innerText = meta;
+            dl.href = '/api/snapshot/' + id;
+            m.classList.remove('hidden');
+        }
+
+        function closeSnapshotModal() {
+            var m = document.getElementById('snapshot-modal');
+            if (m) m.classList.add('hidden');
+        }
+
+        // Close on escape
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSnapshotModal();
+        });
+
+        function loadAuditLogs() {
+            var container = document.getElementById('audit-table-container');
+            if (!container) return;
+            container.innerHTML = '<div class="text-xs text-slate-400 py-4 font-mono animate-pulse">Loading audit database records...</div>';
+
+            fetch('/api/logs?limit=250')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.status !== 'success' || !res.logs || res.logs.length === 0) {
+                        container.innerHTML = '<div class="text-xs text-slate-500 py-4">No logged incidents found in audit registry.</div>';
+                        return;
+                    }
+
+                    var navBadge = document.getElementById('nav-log-count');
+                    if (navBadge) navBadge.innerText = res.logs.length + '+';
+
+                    var html = `
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs font-mono">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60 uppercase text-[10px] tracking-wider">
+                                        <th class="py-2.5 px-3">ID</th>
+                                        <th class="py-2.5 px-3">Camera Node</th>
+                                        <th class="py-2.5 px-3">Zone</th>
+                                        <th class="py-2.5 px-3">Violation Details</th>
+                                        <th class="py-2.5 px-3">Timestamp</th>
+                                        <th class="py-2.5 px-3">Status</th>
+                                        <th class="py-2.5 px-3 text-right">Evidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/60">
+                    `;
+
+                    res.logs.forEach(function(item) {
+                        var isPpe = (item.violation_type || '').indexOf('PPE') !== -1;
+                        var badgeClass = isPpe ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30';
+                        var metaStr = item.camera_id + ' • ' + (item.zone || 'Site') + ' • ' + item.timestamp;
+
+                        var snapshotBtn = item.snapshot_path 
+                            ? `<button onclick="openSnapshotModal(${item.id}, '${metaStr}')" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 transition">View Snapshot</button>`
+                            : `<span class="text-slate-600">No Image</span>`;
+
+                        html += `
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="py-2 px-3 text-slate-500">#${item.id}</td>
+                                <td class="py-2 px-3 font-bold text-slate-200">
+                                    ${item.camera_id} <span class="font-normal text-slate-400">(${item.camera_name})</span>
+                                </td>
+                                <td class="py-2 px-3 text-slate-300">${item.zone || '--'}</td>
+                                <td class="py-2 px-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                                        ${item.violation_type}
+                                    </span>
+                                </td>
+                                <td class="py-2 px-3 text-slate-400">${item.timestamp}</td>
+                                <td class="py-2 px-3">
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800">${item.status}</span>
+                                </td>
+                                <td class="py-2 px-3 text-right">${snapshotBtn}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    container.innerHTML = html;
+                })
+                .catch(function(err) {
+                    container.innerHTML = '<div class="text-xs text-red-400 py-4 font-mono">Failed to query audit database: ' + err + '</div>';
+                });
+        }
+
+</script>
+
+    <!-- SNAPSHOT PREVIEW MODAL -->
+    <div id="snapshot-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel-card max-w-3xl w-full rounded-2xl p-4 border border-slate-700 shadow-2xl relative font-mono text-xs">
+            <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-700">
+                <div id="modal-title" class="font-bold text-slate-100 text-sm">Incident Evidence Snapshot</div>
+                <button onclick="closeSnapshotModal()" class="text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800">ESC / ✕</button>
+            </div>
+            <div class="bg-black rounded-lg overflow-hidden flex items-center justify-center max-h-[70vh]">
+                <img id="modal-img" src="" alt="Evidence" class="max-h-[68vh] w-auto object-contain" />
+            </div>
+            <div class="flex items-center justify-between mt-3 text-slate-400 text-[11px]">
+                <span id="modal-meta">--</span>
+                <a id="modal-download" href="#" target="_blank" class="text-cyan-400 hover:underline">Open Original File ↗</a>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
