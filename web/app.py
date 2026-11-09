@@ -683,6 +683,52 @@ def get_map_data():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+@app.route("/api/sidebar_summary")
+def get_sidebar_summary():
+    import sqlite3
+    try:
+        conn = sqlite3.connect("/home/zeus/ai-cctv/data/cctv_audit.db")
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        # Count active alerts today
+        cur.execute("SELECT COUNT(*) FROM violations WHERE date(timestamp) = date('now', 'localtime')")
+        today_alerts = cur.fetchone()[0]
+
+        # Recent 5 alerts with formatted metadata
+        cur.execute("""
+            SELECT id, camera_id, violation_type, timestamp, 
+                   COALESCE(status, 'ACTIVE') as status
+            FROM violations 
+            ORDER BY id DESC LIMIT 5
+        """)
+        rows = [dict(r) for r in cur.fetchall()]
+        conn.close()
+
+        # Camera name lookup
+        cam_names = {
+            "CAM_01": "Main Entrance Gate",
+            "CAM_02": "Hostel 2 & 3 Entrance",
+            "CAM_03": "MPDP PTJV Gate",
+            "CAM_04": "Observation Deck",
+            "CAM_05": "CPA Castle",
+            "CAM_06": "Kamachan Gate"
+        }
+        for item in rows:
+            item["camera_name"] = cam_names.get(item["camera_id"], item["camera_id"])
+
+        return jsonify({
+            "status": "success",
+            "total_sites": 1,
+            "active_cameras": 6,
+            "active_alerts_today": today_alerts,
+            "recent_alerts": rows
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)
 
