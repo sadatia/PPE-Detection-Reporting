@@ -21,6 +21,7 @@ class AlertDispatcher:
 
         # WAHA WhatsApp Configuration
         self.waha_endpoint = os.getenv("WAHA_ENDPOINT", "http://127.0.0.1:3000/api/sendImage").strip()
+        self.wa_session = os.getenv("WAHA_SESSION", "PTJVIT").strip()
         self.wa_api_key = os.getenv("WAHA_API_KEY", "ptjv4455").strip()
         self.wa_chat_id = os.getenv("WHATSAPP_CHAT_ID", "120363432286181800@g.us").strip()
 
@@ -154,6 +155,7 @@ class AlertDispatcher:
             b64_data = base64.b64encode(img_bytes).decode("utf-8")
             payload = {
                 "session": "default",
+                "session": self.wa_session,
                 "chatId": self.wa_chat_id,
                 "caption": caption,
                 "file": {
