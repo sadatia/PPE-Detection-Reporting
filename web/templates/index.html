@@ -1117,7 +1117,7 @@
         function initSiteMap() {
             if (siteMapInstance) return;
 
-            siteMapInstance = L.map('site-geospatial-map', { attributionControl: false }).setView([21.6948, 91.8750], 14);
+            siteMapInstance = L.map('site-geospatial-map', { attributionControl: false }).setView([21.6930, 91.8730], 13);
 
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(siteMapInstance);
 
@@ -1136,7 +1136,8 @@
                 .then(function(res) {
                     if (res.status !== 'success') return;
                     var heatPoints = [];
-                    var bounds = [];
+                    // Pre-seed bounds with Area A and Area B polygon vertices
+                    var bounds = areaA_coords.concat(areaB_coords);
 
                     res.cameras.forEach(function(cam) {
                         bounds.push([cam.lat, cam.lng]);
@@ -1169,7 +1170,7 @@
                     if (typeof L.heatLayer === 'function') {
                         L.heatLayer(heatPoints, { radius: 35, blur: 20, maxZoom: 16 }).addTo(siteMapInstance);
                     }
-                    if (bounds.length > 0) siteMapInstance.fitBounds(bounds, { padding: [40, 40] });
+                    if (bounds.length > 0) siteMapInstance.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 });
                 });
         }
     </script>
