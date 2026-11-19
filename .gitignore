@@ -19,3 +19,13 @@ runs/
 # Environment and sensitive keys
 .env
 config/secrets.yaml
+
+# Runtime data, logs, datasets, and large model weights
+data/*.db
+data/*.log
+logs/
+reports/
+datasets/
+models/*.pt
+runs/
+*.bak_*
