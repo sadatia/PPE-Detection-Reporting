@@ -43,7 +43,7 @@ class SafetyInferenceEngine:
     def __init__(
         self,
         model_path="yolo11l.pt",
-        ppe_model_path="models/ppe_detector.pt",
+        ppe_model_path="models/matarbari_ppe_v1.pt",
         config_path="config/rules.yaml",
     ):
         self.model_path = model_path
