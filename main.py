@@ -31,7 +31,7 @@ class SurveillanceDaemon:
             self.rules_cfg = yaml.safe_load(f)
 
         self.manager = MultiCameraManager(config_path="config/cameras.yaml")
-        self.engine = SafetyInferenceEngine(model_path="yolov8s.pt", config_path="config/rules.yaml")
+        self.engine = SafetyInferenceEngine(model_path="yolo11l.pt", config_path="config/rules.yaml")
         self.tracker = PersonSafetyTracker(containment_threshold=0.55)
         timing_cfg = self.rules_cfg.get("detection_rules", {}).get("timing", {})
         self.debouncer = ViolationDebouncer(

@@ -2,13 +2,13 @@ detection_rules:
   thresholds:
     day:
       person: 0.45
-      vest: 0.4
-      helmet: 0.45
+      vest: 0.28
+      helmet: 0.28
       boot: 0.35
     night:
       person: 0.52
-      vest: 0.35
-      helmet: 0.55
+      vest: 0.28
+      helmet: 0.32
       boot: 0.35
   timing:
     ppe_persistence_seconds: 3.5
