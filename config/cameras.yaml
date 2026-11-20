@@ -1,17 +1,17 @@
 cameras:
 - id: CAM_01
-  name: Main Entrance Gate
+  name: BREB Substation
   zone: Zone A - Access Control
-  rtsp_url: rtsp://admin:aqashi888@10.220.147.135:554/cam/realmonitor?channel=1&subtype=0
+  rtsp_url: rtsp://admin:aqashi888@10.220.147.61:554/cam/realmonitor?channel=1&subtype=0
   toa_speaker_ip: 10.220.148.13
   enabled: true
   roi: []
   latitude: 21.6948001
   longitude: 91.885251
 - id: CAM_02
-  name: Hostel 2 & 3 Entrance
+  name: Pla1 Entrance
   zone: Zone B - Hostel Area
-  rtsp_url: rtsp://admin:aqashi888@10.220.147.88:554/cam/realmonitor?channel=1&subtype=0
+  rtsp_url: rtsp://admin:aqashi888@10.220.125.25:554/cam/realmonitor?channel=1&subtype=0
   toa_speaker_ip: 10.220.148.13
   enabled: true
   roi: []
