@@ -203,7 +203,7 @@
                                 <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
                             </div>
                             <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                                <img id="feed-CAM_01" src="/api/camera_frame/CAM_01?res=low" class="w-full h-full object-cover" alt="CAM_01" />
+                                <img id="feed-CAM_01" src="/api/video_feed/CAM_01?res=low" class="w-full h-full object-cover" alt="CAM_01" />
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
                                 <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
@@ -221,7 +221,7 @@
                                 <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
                             </div>
                             <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                                <img id="feed-CAM_02" src="/api/camera_frame/CAM_02?res=low" class="w-full h-full object-cover" alt="CAM_02" />
+                                <img id="feed-CAM_02" src="/api/video_feed/CAM_02?res=low" class="w-full h-full object-cover" alt="CAM_02" />
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
                                 <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
@@ -239,7 +239,7 @@
                                 <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
                             </div>
                             <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                                <img id="feed-CAM_03" src="/api/camera_frame/CAM_03?res=low" class="w-full h-full object-cover" alt="CAM_03" />
+                                <img id="feed-CAM_03" src="/api/video_feed/CAM_03?res=low" class="w-full h-full object-cover" alt="CAM_03" />
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
                                 <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
@@ -257,7 +257,7 @@
                                 <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
                             </div>
                             <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                                <img id="feed-CAM_04" src="/api/camera_frame/CAM_04?res=low" class="w-full h-full object-cover" alt="CAM_04" />
+                                <img id="feed-CAM_04" src="/api/video_feed/CAM_04?res=low" class="w-full h-full object-cover" alt="CAM_04" />
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
                                 <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
@@ -275,7 +275,7 @@
                                 <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
                             </div>
                             <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                                <img id="feed-CAM_05" src="/api/camera_frame/CAM_05?res=low" class="w-full h-full object-cover" alt="CAM_05" />
+                                <img id="feed-CAM_05" src="/api/video_feed/CAM_05?res=low" class="w-full h-full object-cover" alt="CAM_05" />
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
                                 <span class="text-slate-400">Hikvision ISAPI • 25 FPS</span>
@@ -293,7 +293,7 @@
                                 <span class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded live-badge">LIVE</span>
                             </div>
                             <div class="relative bg-black rounded-lg overflow-hidden flex-1 min-h-[170px]">
-                                <img id="feed-CAM_06" src="/api/camera_frame/CAM_06?res=low" class="w-full h-full object-cover" alt="CAM_06" />
+                                <img id="feed-CAM_06" src="/api/video_feed/CAM_06?res=low" class="w-full h-full object-cover" alt="CAM_06" />
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[11px] font-mono">
                                 <span class="text-slate-400">Dahua 4MP • 25 FPS</span>
@@ -693,7 +693,7 @@
             if (currentTab === 'GRID') {
                 ['CAM_01', 'CAM_02', 'CAM_03', 'CAM_04', 'CAM_05', 'CAM_06'].forEach(function(cid) {
                     var img = document.getElementById('feed-' + cid);
-                    if (img) img.src = '/api/camera_frame/' + cid + '?res=low&t=' + Date.now();
+                    if (img) img.src = '/api/video_feed/' + cid + '?res=low&t=' + Date.now();
                 });
             }
         }, 1200);
@@ -1295,7 +1295,7 @@
                                 <strong style="color:#38bdf8;">${cam.id} — ${cam.name}</strong><br>
                                 Zone: ${cam.zone}<br>
                                 Today Alerts: <strong style="color:#f87171;">${cam.alerts_today}</strong><br>
-                                <img src="/api/camera_frame/${cam.id}?res=low&t=${Date.now()}" style="width:180px; height:100px; object-fit:cover; border-radius:4px; margin-top:4px;" />
+                                <img src="/api/video_feed/${cam.id}?res=low&t=${Date.now()}" style="width:180px; height:100px; object-fit:cover; border-radius:4px; margin-top:4px;" />
                             </div>
                         `);
                         heatPoints.push([cam.lat, cam.lng, cam.intensity]);
@@ -1310,5 +1310,53 @@
                 });
         }
     </script>
+
+<style>
+/* SINGLE_CAM_FULL_EXPAND_PATCH */
+.single-cam-active {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+  height: calc(100vh - 125px) !important;
+}
+.single-cam-active > *:not([style*="display: none"]):not(.hidden) {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  flex: 1 1 auto !important;
+  grid-column: 1 / -1 !important;
+}
+.single-cam-active img,
+.single-cam-active video,
+.single-cam-active canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: calc(100vh - 165px) !important;
+  object-fit: contain !important;
+  background: #05080f !important;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const syncSingleCamLayout = () => {
+    const grids = document.querySelectorAll('[id*="grid"], [class*="grid-cols"]');
+    grids.forEach(grid => {
+      const children = Array.from(grid.children).filter(el => el.tagName === "DIV");
+      if (children.length < 2) return;
+      const visible = children.filter(el => el.offsetParent !== null && getComputedStyle(el).display !== "none");
+      if (visible.length === 1) {
+        grid.classList.add("single-cam-active");
+      } else {
+        grid.classList.remove("single-cam-active");
+      }
+    });
+  };
+  setInterval(syncSingleCamLayout, 250);
+  document.addEventListener("change", syncSingleCamLayout);
+  document.addEventListener("click", syncSingleCamLayout);
+});
+</script>
+
 </body>
 </html>

@@ -135,7 +135,114 @@ from flask import request, Response
 import urllib.request, re, os, glob, yaml, cv2
 from flask import request, Response
 
+
+# --- ULTRA-LOW-LATENCY RTSP MJPEG STREAMING HUB ---
+import threading
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|fflags;nobuffer|flags;low_delay|max_delay;500000"
+
+class LiveStreamHub:
+    def __init__(self):
+        self.frames = {}       # cam_id -> {"low": bytes, "high": bytes, "ts": float}
+        self.locks = {}
+        self.started = False
+        self._init_lock = threading.Lock()
+
+    def _to_substream(self, rtsp_url):
+        if not rtsp_url:
+            return rtsp_url
+        # Dahua / Amcrest substream (low CPU, fast decode)
+        if "subtype=0" in rtsp_url:
+            return rtsp_url.replace("subtype=0", "subtype=1")
+        # Hikvision substream
+        if "Channels/101" in rtsp_url:
+            return rtsp_url.replace("Channels/101", "Channels/102")
+        return rtsp_url
+
+    def ensure_started(self):
+        with self._init_lock:
+            if self.started:
+                return
+            self.started = True
+            try:
+                with open("/home/zeus/ai-cctv/config/cameras.yaml") as f:
+                    cfg = yaml.safe_load(f)
+                cams = cfg.get("cameras", cfg) if isinstance(cfg, dict) else cfg
+                for c in cams:
+                    if isinstance(c, dict) and c.get("enabled", True):
+                        cid = c.get("id")
+                        url = self._to_substream(c.get("rtsp_url"))
+                        if cid and url:
+                            self.locks[cid] = threading.Lock()
+                            t = threading.Thread(target=self._reader_loop, args=(cid, url), daemon=True)
+                            t.start()
+            except Exception as e:
+                print(f"[!] LiveStreamHub init error: {e}")
+
+    def _reader_loop(self, cam_id, rtsp_url):
+        while True:
+            cap = cv2.VideoCapture(rtsp_url, cv2.CAP_FFMPEG)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            if not cap.isOpened():
+                time.sleep(3.0)
+                continue
+            last_encode = 0.0
+            while True:
+                ret, frame = cap.read()
+                if not ret or frame is None:
+                    break
+                now = time.time()
+                # Target ~16 FPS smooth playback without saturating CPU
+                if now - last_encode < 0.06:
+                    continue
+                last_encode = now
+                h, w = frame.shape[:2]
+                # High-quality frame for single-camera expanded view
+                _, hi_buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+                # Compact 640px frame for 6-camera grid view
+                if w > 640:
+                    scale = 640.0 / w
+                    low_img = cv2.resize(frame, (640, int(h * scale)), interpolation=cv2.INTER_AREA)
+                else:
+                    low_img = frame
+                _, lo_buf = cv2.imencode(".jpg", low_img, [int(cv2.IMWRITE_JPEG_QUALITY), 68])
+                with self.locks[cam_id]:
+                    self.frames[cam_id] = {
+                        "low": lo_buf.tobytes(),
+                        "high": hi_buf.tobytes(),
+                        "ts": now
+                    }
+            cap.release()
+            time.sleep(2.0)
+
+    def get_frame(self, cam_id, res="low"):
+        self.ensure_started()
+        entry = self.frames.get(cam_id)
+        if entry and (time.time() - entry["ts"] < 10.0):
+            return entry["high"] if res == "high" else entry["low"]
+        return None
+
+_stream_hub = LiveStreamHub()
+
+@app.route("/api/video_feed/<cam_id>")
+def video_feed(cam_id):
+    res = request.args.get("res", "low")
+    _stream_hub.ensure_started()
+    def generate():
+        last_sent = None
+        while True:
+            jpg = _stream_hub.get_frame(cam_id, res)
+            if jpg and jpg != last_sent:
+                last_sent = jpg
+                yield (b"--frame\r\n"
+                       b"Content-Type: image/jpeg\r\n\r\n" + jpg + b"\r\n")
+            time.sleep(0.055)
+    return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
 def get_live_camera_snapshot(cam_id, res="low"):
+    hub_jpg = _stream_hub.get_frame(cam_id, res)
+    if hub_jpg:
+        return hub_jpg, "LiveRTSPSubstreamHub"
     cfg_path = "/home/zeus/ai-cctv/config/cameras.yaml"
     rtsp_url = None
     try:
