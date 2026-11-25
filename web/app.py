@@ -9,6 +9,179 @@ from flask import Response, Flask, render_template, jsonify, request, send_file,
 
 app = Flask(__name__)
 
+# --- USER AUTHENTICATION & RBAC MODULE ---
+import secrets
+from flask import session, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+
+USERS_DB_PATH = "/home/zeus/ai-cctv/data/users.db"
+SECRET_KEY_FILE = "/home/zeus/ai-cctv/data/.flask_secret"
+
+def _get_or_create_secret_key():
+    os.makedirs(os.path.dirname(SECRET_KEY_FILE), exist_ok=True)
+    if os.path.exists(SECRET_KEY_FILE):
+        with open(SECRET_KEY_FILE, "r") as f:
+            return f.read().strip()
+    key = secrets.token_hex(32)
+    with open(SECRET_KEY_FILE, "w") as f:
+        f.write(key)
+    return key
+
+app.secret_key = _get_or_create_secret_key()
+
+def init_users_db():
+    os.makedirs(os.path.dirname(USERS_DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(USERS_DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            full_name TEXT NOT NULL,
+            department TEXT NOT NULL DEFAULT 'safety',
+            role TEXT NOT NULL CHECK(role IN ('admin', 'safety')),
+            password_hash TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    if cur.fetchone()[0] == 0:
+        cur.execute(
+            "INSERT INTO users (username, full_name, department, role, password_hash, is_active) VALUES (?, ?, ?, ?, ?, 1)",
+            ("admin", "System Administrator", "IT & Management", "admin", generate_password_hash("Admin@1234"))
+        )
+    conn.commit()
+    conn.close()
+
+init_users_db()
+
+# Routes only admin can modify
+ADMIN_ONLY_PREFIXES = ("/api/users", "/api/config/thresholds")
+# Violation revision/fix endpoints allowed for both 'admin' and 'safety'
+SAFETY_EDIT_PREFIXES = ("/api/violations/bulk_acknowledge", "/api/audit/update_status")
+
+@app.before_request
+def enforce_rbac():
+    path = request.path
+    if path in ("/login", "/logout") or path.startswith("/static/"):
+        return None
+    user = session.get("user")
+    if not user:
+        if path.startswith("/api/"):
+            return jsonify({"error": "Authentication required"}), 401
+        return redirect(url_for("login"))
+
+    role = user.get("role", "")
+    # Admin-only endpoints
+    if any(path.startswith(p) for p in ADMIN_ONLY_PREFIXES):
+        if request.method != "GET" or path.startswith("/api/users"):
+            if role != "admin":
+                return jsonify({"error": "Admin privileges required"}), 403
+
+    # Safety & Admin violation revision endpoints
+    if path.endswith("/audit") or any(path.startswith(p) for p in SAFETY_EDIT_PREFIXES):
+        if role not in ("admin", "safety"):
+            return jsonify({"error": "Safety or Admin privileges required to revise violations"}), 403
+
+    return None
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        conn = sqlite3.connect(USERS_DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+        row = cur.fetchone()
+        conn.close()
+        if row and row["is_active"] == 1 and check_password_hash(row["password_hash"], password):
+            session["user"] = {
+                "id": row["id"],
+                "username": row["username"],
+                "full_name": row["full_name"],
+                "department": row["department"],
+                "role": row["role"]
+            }
+            return redirect("/")
+        return render_template("login.html", error="Invalid username, password, or disabled account.")
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+@app.route("/api/me", methods=["GET"])
+def api_me():
+    return jsonify(session.get("user", {}))
+
+@app.route("/api/users", methods=["GET"])
+def list_users():
+    conn = sqlite3.connect(USERS_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT id, username, full_name, department, role, is_active, created_at FROM users ORDER BY id ASC").fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+@app.route("/api/users", methods=["POST"])
+def create_user():
+    data = request.get_json(force=True)
+    username = (data.get("username") or "").strip()
+    full_name = (data.get("full_name") or "").strip()
+    role = (data.get("role") or "safety").strip().lower()
+    department = (data.get("department") or ("Safety Dept" if role == "safety" else "Administration")).strip()
+    password = data.get("password") or ""
+
+    if not username or not full_name or len(password) < 6:
+        return jsonify({"error": "Username, full name, and password (min 6 chars) are required."}), 400
+    if role not in ("admin", "safety"):
+        return jsonify({"error": "Role must be 'admin' or 'safety'."}), 400
+
+    try:
+        conn = sqlite3.connect(USERS_DB_PATH)
+        conn.execute(
+            "INSERT INTO users (username, full_name, department, role, password_hash, is_active) VALUES (?, ?, ?, ?, ?, 1)",
+            (username, full_name, department, role, generate_password_hash(password))
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "created", "username": username, "role": role}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({"error": f"Username '{username}' already exists."}), 409
+
+@app.route("/api/users/<int:user_id>", methods=["PUT"])
+def update_user(user_id):
+    data = request.get_json(force=True)
+    conn = sqlite3.connect(USERS_DB_PATH)
+    cur = conn.cursor()
+    if "role" in data and data["role"] in ("admin", "safety"):
+        cur.execute("UPDATE users SET role = ? WHERE id = ?", (data["role"], user_id))
+    if "full_name" in data and data["full_name"].strip():
+        cur.execute("UPDATE users SET full_name = ? WHERE id = ?", (data["full_name"].strip(), user_id))
+    if "department" in data and data["department"].strip():
+        cur.execute("UPDATE users SET department = ? WHERE id = ?", (data["department"].strip(), user_id))
+    if "is_active" in data:
+        cur.execute("UPDATE users SET is_active = ? WHERE id = ?", (1 if data["is_active"] else 0, user_id))
+    if data.get("password") and len(data["password"]) >= 6:
+        cur.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(data["password"]), user_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "updated"})
+
+@app.route("/api/users/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    if session.get("user", {}).get("id") == user_id:
+        return jsonify({"error": "Cannot delete your own active admin account."}), 400
+    conn = sqlite3.connect(USERS_DB_PATH)
+    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "deleted"})
+
+
 DB_PATH = "/home/zeus/ai-cctv/data/cctv_audit.db"
 CONFIG_PATH = "/home/zeus/ai-cctv/config/cameras.yaml"
 SNAPSHOT_DIRS = [

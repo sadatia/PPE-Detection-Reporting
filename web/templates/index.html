@@ -44,6 +44,140 @@
             font-size: 10px !important;
         }
     </style>
+
+<style>
+/* PTJV_REFINED_COLOR_TONE_THEME */
+:root {
+  --bg-canvas: #090d14;
+  --bg-surface: rgba(16, 23, 36, 0.86);
+  --bg-elevated: #151f30;
+  --bg-input: #0c121d;
+  --border-hairline: rgba(148, 163, 184, 0.14);
+  --border-accent: rgba(20, 184, 166, 0.35);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --accent-teal: #14b8a6;
+  --accent-teal-hover: #0d9488;
+  --accent-amber: #f59e0b;
+  --accent-crimson: #f43f5e;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 50% at 85% -10%, rgba(20, 184, 166, 0.10), transparent),
+    radial-gradient(ellipse 60% 40% at 10% 100%, rgba(56, 189, 248, 0.06), transparent),
+    var(--bg-canvas) !important;
+  color: var(--text-primary) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Panels, Sidebars & Headers */
+.glass-panel,
+aside,
+header {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-hairline) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+/* Elevated Cards & Form Containers */
+.bg-slate-900,
+.bg-slate-900\/90,
+.bg-slate-900\/70,
+.bg-slate-900\/60,
+.bg-slate-900\/50 {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-hairline) !important;
+}
+
+/* Inputs & Dropdowns */
+input, select, textarea {
+  background-color: var(--bg-input) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: var(--text-primary) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-teal) !important;
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.18) !important;
+  outline: none !important;
+}
+
+/* Calibrated Primary Teal Accents */
+.bg-cyan-600 { background: linear-gradient(135deg, #0d9488, #14b8a6) !important; }
+.hover\:bg-cyan-500:hover { background: linear-gradient(135deg, #14b8a6, #2dd4bf) !important; }
+.text-cyan-400, .text-cyan-300 { color: #2dd4bf !important; }
+.bg-cyan-500\/20 { background-color: rgba(20, 184, 166, 0.16) !important; }
+.border-cyan-500\/40 { border-color: var(--border-accent) !important; }
+
+/* Navigation Active & Hover States */
+nav button:hover, aside button:hover {
+  background-color: rgba(30, 41, 59, 0.75) !important;
+}
+
+/* Table Row Polish */
+thead tr {
+  background-color: rgba(9, 13, 20, 0.75) !important;
+  color: var(--text-secondary) !important;
+}
+tbody tr:hover {
+  background-color: rgba(20, 184, 166, 0.06) !important;
+}
+
+/* Sleek Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(9, 13, 20, 0.6); }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.5); }
+
+/* Balanced Video Feed Tone */
+img[src*="/api/video_feed/"] {
+  filter: contrast(1.05) saturate(1.06) brightness(1.01);
+}
+</style>
+
+
+<style>
+/* MATRIX_16_9_CAMERA_CARDS */
+/* Prevent parent grid from stretching rows into huge empty gaps */
+[id*="grid"]:not(.single-cam-active),
+[class*="grid-cols"]:not(.single-cam-active) {
+  align-content: start !important;
+  align-items: start !important;
+  grid-auto-rows: max-content !important;
+  grid-template-rows: none !important;
+  row-gap: 14px !important;
+  column-gap: 14px !important;
+  height: auto !important;
+}
+
+/* Keep each camera card in clean 16:9 widescreen proportion */
+[id*="grid"]:not(.single-cam-active) > div,
+[class*="grid-cols"]:not(.single-cam-active) > div {
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Fill the 16:9 card cleanly between top header and bottom status bar */
+[id*="grid"]:not(.single-cam-active) > div img,
+[id*="grid"]:not(.single-cam-active) > div video,
+[id*="grid"]:not(.single-cam-active) > div canvas,
+[class*="grid-cols"]:not(.single-cam-active) > div img,
+[class*="grid-cols"]:not(.single-cam-active) > div video,
+[class*="grid-cols"]:not(.single-cam-active) > div canvas {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  width: 100% !important;
+  object-fit: cover !important;
+}
+</style>
+
 </head>
 <body class="text-slate-200 h-screen flex flex-col overflow-hidden">
 
@@ -122,6 +256,22 @@
                         SYSTEM MONITORING
                     </span>
                 </button>
+
+                <button onclick="switchTab('USERS')" id="btn-tab-USERS" class="hidden w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800 transition">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        USER MANAGEMENT
+                    </span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">ADMIN</span>
+                </button>
+
+                <div id="user-session-card" class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between px-2 py-1.5 rounded-lg bg-slate-900/60">
+                    <div class="truncate">
+                        <div id="current-user-name" class="text-[11px] font-bold text-slate-200 truncate">Loading...</div>
+                        <div id="current-user-role" class="text-[10px] uppercase tracking-wider text-cyan-400 font-mono">...</div>
+                    </div>
+                    <a href="/logout" class="px-2 py-1 rounded bg-red-500/15 hover:bg-red-500/30 border border-red-500/30 text-red-300 text-[10px] font-bold">LOGOUT</a>
+                </div>
             </div>
 
             <hr class="border-slate-800 my-1">
@@ -1355,6 +1505,213 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(syncSingleCamLayout, 250);
   document.addEventListener("change", syncSingleCamLayout);
   document.addEventListener("click", syncSingleCamLayout);
+});
+</script>
+
+
+<!-- USER_MANAGEMENT_RBAC_UI -->
+<div id="tab-USERS" class="hidden flex-1 glass-panel rounded-xl p-5 overflow-y-auto custom-scrollbar flex flex-col gap-5 text-xs">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+    <div>
+      <h2 class="text-base font-bold text-white tracking-wide">User &amp; Role Management</h2>
+      <p class="text-slate-400 text-xs">Manage registered operators. <span class="text-cyan-400 font-semibold">Admin</span> has full control; <span class="text-emerald-400 font-semibold">Safety</span> users can revise, fix, and update PPE violation records.</p>
+    </div>
+  </div>
+
+  <!-- Create New User Form -->
+  <form id="create-user-form" class="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-900/70 p-4 rounded-xl border border-slate-800">
+    <div>
+      <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Username</label>
+      <input type="text" id="new-username" required placeholder="e.g. safety_lead" class="w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-white" />
+    </div>
+    <div>
+      <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Full Name</label>
+      <input type="text" id="new-fullname" required placeholder="e.g. Hasan Mahmud" class="w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-white" />
+    </div>
+    <div>
+      <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">User Category / Role</label>
+      <select id="new-role" class="w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-white">
+        <option value="safety">Safety (Revise &amp; Update PPE)</option>
+        <option value="admin">Admin (Full Permission)</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Department</label>
+      <input type="text" id="new-dept" value="Safety Dept" class="w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-white" />
+    </div>
+    <div>
+      <label class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Password (min 6)</label>
+      <input type="password" id="new-password" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 rounded bg-slate-950 border border-slate-700 text-white" />
+    </div>
+    <div class="flex items-end">
+      <button type="submit" class="w-full py-2 px-4 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-bold tracking-wide transition cursor-pointer">
+        + ADD USER
+      </button>
+    </div>
+  </form>
+
+  <!-- Registered Users Table -->
+  <div class="overflow-x-auto bg-slate-900/50 rounded-xl border border-slate-800">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-slate-800 text-[10px] uppercase text-slate-400 bg-slate-950/60">
+          <th class="py-3 px-4">ID</th>
+          <th class="py-3 px-4">Username</th>
+          <th class="py-3 px-4">Full Name</th>
+          <th class="py-3 px-4">Department</th>
+          <th class="py-3 px-4">Category / Role</th>
+          <th class="py-3 px-4">Status</th>
+          <th class="py-3 px-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body" class="divide-y divide-slate-800/70 text-slate-200"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Relocate #tab-USERS into the main tab container alongside #tab-LOGS
+  const logsTab = document.getElementById("tab-LOGS");
+  const usersTab = document.getElementById("tab-USERS");
+  if (logsTab && usersTab && logsTab.parentElement) {
+    logsTab.parentElement.appendChild(usersTab);
+  }
+
+  // Load current logged-in user and reveal Admin User Management tab if role === 'admin'
+  fetch("/api/me").then(r => r.json()).then(me => {
+    const nameEl = document.getElementById("current-user-name");
+    const roleEl = document.getElementById("current-user-role");
+    if (nameEl) nameEl.textContent = me.full_name || me.username || "User";
+    if (roleEl) roleEl.textContent = (me.role || "safety").toUpperCase() + " • " + (me.department || "");
+    if (me.role === "admin") {
+      const btn = document.getElementById("btn-tab-USERS");
+      if (btn) btn.classList.remove("hidden");
+      loadUsersTable();
+    }
+  });
+
+  window.loadUsersTable = async function() {
+    const res = await fetch("/api/users");
+    if (!res.ok) return;
+    const users = await res.json();
+    const tbody = document.getElementById("users-table-body");
+    if (!tbody) return;
+    tbody.innerHTML = users.map(u => `
+      <tr class="hover:bg-slate-800/40">
+        <td class="py-2.5 px-4 font-mono text-slate-400">#${u.id}</td>
+        <td class="py-2.5 px-4 font-bold text-white">${u.username}</td>
+        <td class="py-2.5 px-4">${u.full_name}</td>
+        <td class="py-2.5 px-4 text-slate-300">${u.department}</td>
+        <td class="py-2.5 px-4">
+          <select onchange="updateUserField(${u.id}, {role: this.value})" class="px-2 py-1 rounded bg-slate-950 border border-slate-700 text-xs font-bold ${u.role === 'admin' ? 'text-cyan-400' : 'text-emerald-400'}">
+            <option value="safety" ${u.role === 'safety' ? 'selected' : ''}>safety</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
+          </select>
+        </td>
+        <td class="py-2.5 px-4">
+          <button onclick="updateUserField(${u.id}, {is_active: ${u.is_active ? 'false' : 'true'}})"
+            class="px-2 py-0.5 rounded text-[10px] font-bold ${u.is_active ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-red-500/20 text-red-300 border border-red-500/40'}">
+            ${u.is_active ? 'ACTIVE' : 'DISABLED'}
+          </button>
+        </td>
+        <td class="py-2.5 px-4 text-right space-x-2">
+          <button onclick="resetUserPassword(${u.id}, '${u.username}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-semibold">Reset PW</button>
+          <button onclick="deleteUserAccount(${u.id}, '${u.username}')" class="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/40 text-red-300 text-[10px] font-semibold">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+  };
+
+  window.updateUserField = async function(id, payload) {
+    await fetch(`/api/users/${id}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    loadUsersTable();
+  };
+
+  window.resetUserPassword = async function(id, username) {
+    const pw = prompt(`Enter new password for ${username} (min 6 characters):`);
+    if (!pw || pw.length < 6) return;
+    await updateUserField(id, {password: pw});
+    alert(`Password updated for ${username}.`);
+  };
+
+  window.deleteUserAccount = async function(id, username) {
+    if (!confirm(`Delete user "${username}"?`)) return;
+    const res = await fetch(`/api/users/${id}`, {method: "DELETE"});
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || "Failed to delete user");
+    }
+    loadUsersTable();
+  };
+
+  const form = document.getElementById("create-user-form");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        username: document.getElementById("new-username").value,
+        full_name: document.getElementById("new-fullname").value,
+        role: document.getElementById("new-role").value,
+        department: document.getElementById("new-dept").value,
+        password: document.getElementById("new-password").value
+      };
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Could not create user");
+        return;
+      }
+      form.reset();
+      document.getElementById("new-dept").value = "Safety Dept";
+      loadUsersTable();
+    });
+  }
+});
+</script>
+
+
+<style>
+/* FIX_TAB_USERS_VISIBILITY */
+#tab-USERS.hidden {
+  display: none !important;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Wrap existing switchTab so #tab-USERS always hides when switching to another tab
+  if (typeof window.switchTab === "function") {
+    const origSwitchTab = window.switchTab;
+    window.switchTab = function(tabName) {
+      const usersTab = document.getElementById("tab-USERS");
+      const usersBtn = document.getElementById("btn-tab-USERS");
+      origSwitchTab(tabName);
+      if (tabName === "USERS") {
+        // Hide all sibling tab panels
+        if (usersTab && usersTab.parentElement) {
+          Array.from(usersTab.parentElement.children).forEach(el => {
+            if (el.id && el.id.startsWith("tab-") && el.id !== "tab-USERS") {
+              el.classList.add("hidden");
+            }
+          });
+        }
+        usersTab.classList.remove("hidden");
+        if (usersBtn) usersBtn.classList.add("bg-slate-800", "text-cyan-400");
+        if (typeof window.loadUsersTable === "function") window.loadUsersTable();
+      } else {
+        if (usersTab) usersTab.classList.add("hidden");
+        if (usersBtn) usersBtn.classList.remove("bg-slate-800", "text-cyan-400");
+      }
+    };
+  }
 });
 </script>
 
